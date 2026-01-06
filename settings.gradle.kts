@@ -1,5 +1,5 @@
 
-rootProject.name = "web-idl-kt"
+rootProject.name = "webidl-kt"
 
 pluginManagement {
     repositories {
