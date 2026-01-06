@@ -94,7 +94,7 @@ class WebIDLEnum(
 
 class WebIDLTypeDef(
     val name: String,
-    val source: List<WebIDLLexer.Lexeme>
+    val source: com.huskerdev.webidl.parser.WebIDLType
 ): WebIDLDeclaration {
     lateinit var linked: WebIDLType
         private set

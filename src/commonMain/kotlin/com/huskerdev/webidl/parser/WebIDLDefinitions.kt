@@ -156,7 +156,7 @@ data class WebIDLCallbackFunctionDef(
 // typedef
 data class WebIDLTypeDefDef(
     val name: String,
-    val type: List<WebIDLLexer.Lexeme>,
+    val type: WebIDLType,
     override val attributes: List<WebIDLExtendedAttributeDef>
 ): WebIDLDefinition(), IdlAttributedHolder {
     override fun toString(spaces: Int, builder: StringBuilder) {
@@ -245,7 +245,7 @@ data class WebIDLConstructorDef(
 // function
 data class WebIDLFunctionDef(
     val name: String,
-    val type: List<WebIDLLexer.Lexeme>,
+    val type: WebIDLType,
     val args: List<WebIDLFieldDef>,
     val isStatic: Boolean,
     override val attributes: List<WebIDLExtendedAttributeDef>,
@@ -268,7 +268,7 @@ data class WebIDLFunctionDef(
 // field
 data class WebIDLFieldDef(
     val name: String,
-    val type: List<WebIDLLexer.Lexeme>,
+    val type: WebIDLType,
     val value: Value?,
     val isAttribute: Boolean,
     val isStatic: Boolean,
@@ -341,35 +341,35 @@ data class WebIDLFieldDef(
 
 // iterable
 class WebIDLIterableDef(
-    val keyType: List<WebIDLLexer.Lexeme>,
-    val valueType: List<WebIDLLexer.Lexeme>?
+    val keyType: WebIDLType,
+    val valueType: WebIDLType?
 ): WebIDLDefinition() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("iterable<")
-            .append(keyType.stringifyType())
+            .append(keyType)
         if(valueType != null)
-            builder.append(", ").append(valueType.stringifyType())
+            builder.append(", ").append(valueType)
         builder.append(">")
     }
 }
 
 // async_iterable
 class WebIDLAsyncIterableLikeDef(
-    val keyType: List<WebIDLLexer.Lexeme>,
-    val valueType: List<WebIDLLexer.Lexeme>?
+    val keyType: WebIDLType,
+    val valueType: WebIDLType?
 ): WebIDLDefinition() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("async_iterable<")
-            .append(keyType.stringifyType())
+            .append(keyType)
         if(valueType != null)
-            builder.append(", ").append(valueType.stringifyType())
+            builder.append(", ").append(valueType)
         builder.append(">")
     }
 }
 
 class WebIDLMapLikeDef(
-    val keyType: List<WebIDLLexer.Lexeme>,
-    val valueType: List<WebIDLLexer.Lexeme>,
+    val keyType: WebIDLType,
+    val valueType: WebIDLType,
     val isReadOnly: Boolean
 ): WebIDLDefinition() {
     override fun toString(spaces: Int, builder: StringBuilder) {
@@ -382,7 +382,7 @@ class WebIDLMapLikeDef(
 }
 
 class WebIDLSetLikeDef(
-    val type: List<WebIDLLexer.Lexeme>,
+    val type: WebIDLType,
     val isReadOnly: Boolean
 ): WebIDLDefinition() {
     override fun toString(spaces: Int, builder: StringBuilder) {
@@ -455,20 +455,12 @@ data class WebIDLExtendedAttributeDefArgList(
 
 data class WebIDLExtendedAttributeDefNamedArgList(
     override val name: String,
-    val identifier: List<WebIDLLexer.Lexeme>,
-    val args: List<WebIDLFieldDef>
+    val function: WebIDLFunctionDef
 ): WebIDLExtendedAttributeDef() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append(name)
             .append("=")
-            .append(identifier)
-            .append("(")
-        args.forEachIndexed { index, def ->
-            def.toString(spaces, builder)
-            if(index != args.lastIndex)
-                builder.append(", ")
-        }
-        builder.append(")")
+        function.toString(spaces, builder)
     }
 }
 

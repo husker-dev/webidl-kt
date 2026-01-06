@@ -28,7 +28,7 @@ fun assertField(
     assertIs<WebIDLFieldDef>(def)
 
     assertEquals(name, def.name)
-    assertEquals(type, def.type.stringifyType())
+    assertEquals(type, def.type.toString())
     if(value != null) {
         assertNotNull(def.value)
         assertEquals(value, def.value.toString())
@@ -61,7 +61,7 @@ fun assertFunction(
     assertIs<WebIDLFunctionDef>(def)
 
     assertEquals(name, def.name)
-    assertEquals(type, def.type.stringifyType())
+    assertEquals(type, def.type.toString())
     assertEquals(argsCount, def.args.size)
     assertEquals(isStatic, def.isStatic, "expected 'static'")
 
@@ -224,10 +224,10 @@ fun assertIterable(
     valueType: String? = null
 ){
     assertIs<WebIDLIterableDef>(attr)
-    assertEquals(keyType, attr.keyType.stringifyType())
+    assertEquals(keyType, attr.keyType.toString())
     if(valueType != null) {
         assertNotNull(attr.valueType)
-        assertEquals(valueType, attr.valueType.stringifyType())
+        assertEquals(valueType, attr.valueType.toString())
     }
 }
 
@@ -238,10 +238,10 @@ fun assertAsyncIterable(
     valueType: String? = null
 ){
     assertIs<WebIDLAsyncIterableLikeDef>(attr)
-    assertEquals(keyType, attr.keyType.stringifyType())
+    assertEquals(keyType, attr.keyType.toString())
     if(valueType != null) {
         assertNotNull(attr.valueType)
-        assertEquals(valueType, attr.valueType.stringifyType())
+        assertEquals(valueType, attr.valueType.toString())
     }
 }
 
@@ -253,11 +253,11 @@ fun assertMapLike(
     isReadOnly: Boolean
 ){
     assertIs<WebIDLMapLikeDef>(attr)
-    assertEquals(keyType, attr.keyType.stringifyType())
+    assertEquals(keyType, attr.keyType.toString())
     assertEquals(isReadOnly, attr.isReadOnly)
     if(valueType != null) {
         assertNotNull(attr.valueType)
-        assertEquals(valueType, attr.valueType.stringifyType())
+        assertEquals(valueType, attr.valueType.toString())
     }
 }
 
@@ -268,7 +268,7 @@ fun assertSetLike(
     isReadOnly: Boolean
 ){
     assertIs<WebIDLSetLikeDef>(attr)
-    assertEquals(type, attr.type.stringifyType())
+    assertEquals(type, attr.type.toString())
     assertEquals(isReadOnly, attr.isReadOnly)
 }
 
@@ -279,7 +279,7 @@ fun assertTypedef(
     identifier: String
 ){
     assertIs<WebIDLTypeDefDef>(attr)
-    assertEquals(type, attr.type.stringifyType())
+    assertEquals(type, attr.type.toString())
     assertEquals(identifier, attr.name)
 }
 

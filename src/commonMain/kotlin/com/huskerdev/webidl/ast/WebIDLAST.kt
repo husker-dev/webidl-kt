@@ -64,7 +64,7 @@ class WebIDLAST(
             ?: throw UnsupportedOperationException("Type '$name' is not declared")
     }
 
-    fun findType(type: List<WebIDLLexer.Lexeme>): WebIDLType {
+    fun findType(type: com.huskerdev.webidl.parser.WebIDLType): WebIDLType {
         throw UnsupportedOperationException()
     }
 

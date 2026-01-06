@@ -4,20 +4,6 @@ import com.huskerdev.webidl.WebIDLEnv
 import com.huskerdev.webidl.lexer.WebIDLLexer
 
 
-private val openBrackets = setOf(
-    WebIDLLexer.LexemeType.L_ANGLE_BRACKET,
-    WebIDLLexer.LexemeType.L_ROUND_BRACKET,
-    WebIDLLexer.LexemeType.L_CURLY_BRACKET,
-    WebIDLLexer.LexemeType.L_SQUARE_BRACKET,
-)
-
-private val closeBrackets = setOf(
-    WebIDLLexer.LexemeType.L_ANGLE_BRACKET,
-    WebIDLLexer.LexemeType.L_ROUND_BRACKET,
-    WebIDLLexer.LexemeType.L_CURLY_BRACKET,
-    WebIDLLexer.LexemeType.L_SQUARE_BRACKET,
-)
-
 private val modifiers = setOf(
     "partial", "readonly", "attribute",
     "const", "static", "inherit", "optional"
@@ -128,64 +114,70 @@ class WebIDLParser(
         }
     }
 
-    private fun parseType(): List<WebIDLLexer.Lexeme> = buildList {
-        when (lexer.current.type) {
+    private fun parseType(): WebIDLType {
+        val result = when (lexer.current.type) {
 
             // identifier
             WebIDLLexer.LexemeType.IDENTIFIER -> {
-                add(lexer.current)
+                val name = lexer.current.content
                 lexer.next()
+                WebIDLIdentifierType(name)
             }
 
             // union type
             WebIDLLexer.LexemeType.L_ROUND_BRACKET -> {
-                add(lexer.current)  // (
                 lexer.next()
-                while(lexer.current.type != WebIDLLexer.LexemeType.R_ROUND_BRACKET) {
-                    addAll(parseType())
-                    add(lexer.current) // 'or' or ')'
-                    if(lexer.current.content == "or")
-                        lexer.next()
+                val types = buildList {
+                    while (lexer.current.type != WebIDLLexer.LexemeType.R_ROUND_BRACKET) {
+                        add(parseType())
+                        if (lexer.current.content == "or")
+                            lexer.next()
+                    }
                 }
                 lexer.next()
+                WebIDLUnionType(types)
             }
 
             // builtin-types
             WebIDLLexer.LexemeType.TYPE -> {
-                add(lexer.current)
-                lexer.next()
-
-                when (lexer.current.type) {
+                val firstLexeme = lexer.current
+                when (lexer.next().type) {
                     // generics (sequence<T>, record<K, V>)
                     WebIDLLexer.LexemeType.L_ANGLE_BRACKET -> {
-                        add(lexer.current)  // <
                         lexer.next()
-                        while(lexer.current.type != WebIDLLexer.LexemeType.R_ANGLE_BRACKET) {
-                            addAll(parseType())
-                            add(lexer.current) // ',' or '>'
-                            if(lexer.current.type == WebIDLLexer.LexemeType.COMMA)
-                                lexer.next()
+                        val types = buildList {
+                            while (lexer.current.type != WebIDLLexer.LexemeType.R_ANGLE_BRACKET) {
+                                add(parseType())
+                                if (lexer.current.type == WebIDLLexer.LexemeType.COMMA)
+                                    lexer.next()
+                            }
                         }
                         lexer.next()
+                        WebIDLGenericType(firstLexeme.content, types)
                     }
 
                     // long types
                     WebIDLLexer.LexemeType.TYPE -> {
-                        add(lexer.current)
-                        while(lexer.next().type == WebIDLLexer.LexemeType.TYPE)
-                            add(lexer.current)
+                        val type = buildList {
+                            add(firstLexeme.content)
+                            add(lexer.current.content)
+                            while(lexer.next().type == WebIDLLexer.LexemeType.TYPE)
+                                add(lexer.current.content)
+                        }.joinToString(" ")
+                        WebIDLDefaultType(type)
                     }
 
                     // simple types
-                    else -> Unit
+                    else -> WebIDLDefaultType(firstLexeme.content)
                 }
             }
-            else -> expectType(lexer.current, WebIDLLexer.LexemeType.TYPE)
+            else -> throw WrongSymbolException(WebIDLLexer.LexemeType.TYPE.word, lexer.current.content)
         }
         if(lexer.current.type == WebIDLLexer.LexemeType.QUESTION) {
-            add(lexer.current)
+            result.nullable = true
             lexer.next()
         }
+        return result
     }
 
     private fun parseNamespace(
@@ -420,8 +412,8 @@ class WebIDLParser(
         )
     }
 
-    private fun parseGeneric(): List<List<WebIDLLexer.Lexeme>> {
-        val list = arrayListOf<List<WebIDLLexer.Lexeme>>()
+    private fun parseGeneric(): List<WebIDLType> {
+        val list = arrayListOf<WebIDLType>()
 
         expectType(lexer.next(), WebIDLLexer.LexemeType.L_ANGLE_BRACKET)
         lexer.next()
@@ -590,7 +582,7 @@ class WebIDLParser(
                                     if(function !is WebIDLFunctionDef || function.name.isNotEmpty())
                                         throw UnsupportedOperationException("Expected anonymous function")
 
-                                    WebIDLExtendedAttributeDefNamedArgList(name, function.type, function.args)
+                                    WebIDLExtendedAttributeDefNamedArgList(name, function)
                                 }
                             }
                         }
@@ -625,7 +617,6 @@ class WebIDLParser(
                             } else // // [Exposed=()]
                                 WebIDLExtendedAttributeDefIdentList(name, emptyList())
                         }
-
                         else -> throw UnsupportedOperationException()
                     }
                 }
@@ -639,41 +630,11 @@ class WebIDLParser(
                 WebIDLLexer.LexemeType.COMMA, WebIDLLexer.LexemeType.R_SQUARE_BRACKET -> {
                     WebIDLExtendedAttributeDefNoArgs(name)
                 }
-
                 else -> throw UnsupportedOperationException()
             }
-
             if (lexer.current.type == WebIDLLexer.LexemeType.COMMA)
                 lexer.next()
         }
         lexer.next()
     }
-}
-
-fun List<WebIDLLexer.Lexeme>.stringifyType(): String {
-    if(size == 1)
-        return get(0).content
-    if(size == 2 && get(1).type == WebIDLLexer.LexemeType.QUESTION)
-        return get(0).content + get(1).content
-
-    if(get(0).type == WebIDLLexer.LexemeType.L_ROUND_BRACKET) {
-        var brackets = 0
-        var lastIndex = 0
-        val builder = StringBuilder("(")
-        forEachIndexed { index, lexeme ->
-            if((lexeme.content == "or" || lexeme.type == WebIDLLexer.LexemeType.R_ROUND_BRACKET) && brackets == 0) {
-                builder.append(subList(lastIndex, index).stringifyType())
-                if(index != size)
-                    builder.append(" or ")
-                lastIndex = index
-            }
-            if(lexeme.type in openBrackets) brackets++
-            if(lexeme.type in closeBrackets) brackets--
-        }
-        return builder.append(')').toString()
-    }
-    if(get(1).type == WebIDLLexer.LexemeType.L_ANGLE_BRACKET)
-        return "${get(0).content}<${subList(2, lastIndex).stringifyType()}>"
-
-    return joinToString(" ") { it.content }
 }
