@@ -1,9 +1,9 @@
-package com.huskerdev.webidl.def
+package com.huskerdev.webidl.parser
 
-import com.huskerdev.webidl.WebIDLLexer
+import com.huskerdev.webidl.lexer.WebIDLLexer
 
 
-sealed class IdlDefinition {
+sealed class WebIDLDefinition {
     fun toString(spaces: Int): String =
         StringBuilder()
             .apply { toString(spaces, this) }
@@ -13,30 +13,33 @@ sealed class IdlDefinition {
 
     override fun toString() =
         toString(2)
+}
 
-    protected fun appendAttributes(
-        spaces: Int,
+sealed interface IdlAttributedHolder {
+    val attributes: List<WebIDLExtendedAttributeDef>
+
+    fun printAttributes(
         builder: StringBuilder,
-        attributes: List<IdlExtendedAttributeDef>,
         newLine: Boolean = true
     ){
         if(attributes.isEmpty())
             return
         builder.append("[")
         attributes.forEachIndexed { index, def ->
-            def.toString(spaces, builder)
+            def.toString(0, builder)
             if(index != attributes.lastIndex)
                 builder.append(", ")
         }
         builder.append("]")
         if(newLine)
             builder.append('\n')
+        else builder.append(" ")
     }
 }
 
-class IdlDefinitionRoot(
-    val definitions: List<IdlDefinition>
-): IdlDefinition() {
+class WebIDLDefinitionRoot(
+    val definitions: List<WebIDLDefinition>
+): WebIDLDefinition() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         definitions.forEachIndexed { index, def ->
             if(index != 0)
@@ -47,18 +50,18 @@ class IdlDefinitionRoot(
 }
 
 // interface
-data class IdlInterfaceDef(
+data class WebIDLInterfaceDef(
     val name: String,
     val isPartial: Boolean,
     val isMixin: Boolean,
     val isCallback: Boolean,
     val implements: String?,
-    val definitions: List<IdlDefinition>,
-    val attributes: List<IdlExtendedAttributeDef>
-): IdlDefinition() {
+    val definitions: List<WebIDLDefinition>,
+    override val attributes: List<WebIDLExtendedAttributeDef>
+): WebIDLDefinition(), IdlAttributedHolder {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("\n")
-        appendAttributes(spaces, builder, attributes)
+        printAttributes(builder)
         if(isPartial) builder.append("partial ")
         if(isCallback) builder.append("callback ")
         builder.append("interface ")
@@ -79,15 +82,15 @@ data class IdlInterfaceDef(
 }
 
 // namespace
-data class IdlNamespaceDef(
+data class WebIDLNamespaceDef(
     val name: String,
     val isPartial: Boolean,
-    val definitions: List<IdlDefinition>,
-    val attributes: List<IdlExtendedAttributeDef>
-): IdlDefinition() {
+    val definitions: List<WebIDLDefinition>,
+    override val attributes: List<WebIDLExtendedAttributeDef>
+): WebIDLDefinition(), IdlAttributedHolder {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("\n")
-        appendAttributes(spaces, builder, attributes)
+        printAttributes(builder)
         if(isPartial) builder.append("partial ")
         builder.append("namespace ")
             .append(name)
@@ -106,16 +109,16 @@ data class IdlNamespaceDef(
 }
 
 // dictionary
-data class IdlDictionaryDef(
+data class WebIDLDictionaryDef(
     val name: String,
     val implements: String?,
     val isPartial: Boolean,
-    val definitions: List<IdlDefinition>,
-    val attributes: List<IdlExtendedAttributeDef>
-): IdlDefinition() {
+    val definitions: List<WebIDLDefinition>,
+    override val attributes: List<WebIDLExtendedAttributeDef>
+): WebIDLDefinition(), IdlAttributedHolder {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("\n")
-        appendAttributes(spaces, builder, attributes)
+        printAttributes(builder)
         if(isPartial) builder.append("partial ")
         builder.append("dictionary ")
         if(implements != null) builder.append(": ").append(implements).append(" ")
@@ -134,38 +137,31 @@ data class IdlDictionaryDef(
 }
 
 // callback function
-data class IdlCallbackFunctionDef(
+data class WebIDLCallbackFunctionDef(
     val name: String,
-    val type: String,
-    val args: List<IdlFieldDef>,
-    val attributes: List<IdlExtendedAttributeDef>
-): IdlDefinition() {
+    val function: WebIDLFunctionDef,
+    override val attributes: List<WebIDLExtendedAttributeDef>
+): WebIDLDefinition(), IdlAttributedHolder {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("\n")
-        appendAttributes(spaces, builder, attributes)
+        printAttributes(builder)
         builder.append("callback ")
             .append(name)
             .append(" = ")
-            .append(type)
-            .append(" (")
-        args.forEachIndexed { index, def ->
-            def.toString(spaces, builder)
-            if(index != args.lastIndex)
-                builder.append(", ")
-        }
-        builder.append(");")
+        function.toString(spaces, builder)
+        builder.append(";")
     }
 }
 
 // typedef
-data class IdlTypeDefDef(
+data class WebIDLTypeDefDef(
     val name: String,
-    val type: String,
-    val attributes: List<IdlExtendedAttributeDef>
-): IdlDefinition() {
+    val type: List<WebIDLLexer.Lexeme>,
+    override val attributes: List<WebIDLExtendedAttributeDef>
+): WebIDLDefinition(), IdlAttributedHolder {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("\n")
-        appendAttributes(spaces, builder, attributes)
+        printAttributes(builder)
         builder.append("typedef ")
             .append(type)
             .append(" ")
@@ -175,14 +171,14 @@ data class IdlTypeDefDef(
 }
 
 // enum
-data class IdlEnumDef(
+data class WebIDLEnumDef(
     val name: String,
     val elements: List<String>,
-    val attributes: List<IdlExtendedAttributeDef>
-): IdlDefinition() {
+    override val attributes: List<WebIDLExtendedAttributeDef>
+): WebIDLDefinition(), IdlAttributedHolder {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("\n")
-        appendAttributes(spaces, builder, attributes)
+        printAttributes(builder)
         builder.append("enum ")
             .append(name)
             .append(" {\n")
@@ -202,10 +198,10 @@ data class IdlEnumDef(
 }
 
 // includes
-data class IdlIncludesDef(
+data class WebIDLIncludesDef(
     val target: String,
     val source: String
-): IdlDefinition() {
+): WebIDLDefinition() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("\n")
             .append(target)
@@ -216,10 +212,10 @@ data class IdlIncludesDef(
 }
 
 // implements
-data class IdlImplementsDef(
+data class WebIDLImplementsDef(
     val target: String,
     val source: String
-): IdlDefinition() {
+): WebIDLDefinition() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("\n")
             .append(target)
@@ -230,10 +226,12 @@ data class IdlImplementsDef(
 }
 
 // constructor
-data class IdlConstructorDef(
-    val args: List<IdlFieldDef>
-): IdlDefinition() {
+data class WebIDLConstructorDef(
+    val args: List<WebIDLFieldDef>,
+    override val attributes: List<WebIDLExtendedAttributeDef>
+): WebIDLDefinition(), IdlAttributedHolder {
     override fun toString(spaces: Int, builder: StringBuilder) {
+        printAttributes(builder)
         builder.append("constructor(")
         args.forEachIndexed { index, def ->
             def.toString(spaces, builder)
@@ -245,12 +243,15 @@ data class IdlConstructorDef(
 }
 
 // function
-data class IdlFunctionDef(
+data class WebIDLFunctionDef(
     val name: String,
-    val type: String,
-    val args: List<IdlFieldDef>
-): IdlDefinition() {
+    val type: List<WebIDLLexer.Lexeme>,
+    val args: List<WebIDLFieldDef>,
+    val isStatic: Boolean,
+    override val attributes: List<WebIDLExtendedAttributeDef>,
+): WebIDLDefinition(), IdlAttributedHolder {
     override fun toString(spaces: Int, builder: StringBuilder) {
+        printAttributes(builder)
         builder.append(type)
             .append(" ")
             .append(name)
@@ -265,18 +266,21 @@ data class IdlFunctionDef(
 }
 
 // field
-data class IdlFieldDef(
+data class WebIDLFieldDef(
     val name: String,
-    val type: String,
-    val value: WebIDLLexer.Lexeme?,
+    val type: List<WebIDLLexer.Lexeme>,
+    val value: Value?,
     val isAttribute: Boolean,
     val isStatic: Boolean,
     val isReadOnly: Boolean,
     val isInherit: Boolean,
     val isOptional: Boolean,
     val isConst: Boolean,
-): IdlDefinition() {
+    val isVariadic: Boolean,
+    override val attributes: List<WebIDLExtendedAttributeDef>
+): WebIDLDefinition(), IdlAttributedHolder {
     override fun toString(spaces: Int, builder: StringBuilder) {
+        printAttributes(builder)
         if(isStatic) builder.append("static ")
         if(isReadOnly) builder.append("readonly ")
         if(isInherit) builder.append("inherit ")
@@ -284,45 +288,90 @@ data class IdlFieldDef(
         if(isConst) builder.append("const ")
         if(isAttribute) builder.append("attribute ")
         builder.append(type)
-            .append(" ")
+        if(isVariadic)
+            builder.append("...")
+        builder.append(" ")
             .append(name)
-        if(value != null) {
-            builder.append(" = ")
-            if(value.type == WebIDLLexer.LexemeType.STRING)
-                builder.append("\"").append(value.content).append("\"")
-            else
-                builder.append(value.content)
+        if(value != null)
+            builder.append(" = ").append(value)
+    }
+
+    interface Value
+
+    object NullValue: Value {
+        override fun toString() = "null"
+    }
+
+    object DictionaryInitValue: Value {
+        override fun toString() = "{}"
+    }
+
+    class StringValue(
+        val text: String
+    ): Value {
+        override fun toString() = "\"$text\""
+    }
+
+    class IntValue(
+        val text: String,
+        val number: Int = when {
+            "0x" in text.lowercase() -> text.drop(2).toInt(16)
+            "0o" in text.lowercase() -> text.drop(2).toInt(8)
+            "0b" in text.lowercase() -> text.drop(2).toInt(2)
+            else -> text.toInt()
         }
+    ): Value {
+        override fun toString() = text
+    }
+
+    class DecimalValue(
+        val text: String,
+        val number: Double = text.toDouble()
+    ): Value {
+        override fun toString() = text
+    }
+
+    class BooleanValue(
+        val boolValue: Boolean
+    ): Value {
+        override fun toString() = boolValue.toString()
     }
 }
 
 
 // iterable
-class IdlIterableDef(
-    val type: String
-): IdlDefinition() {
+class WebIDLIterableDef(
+    val keyType: List<WebIDLLexer.Lexeme>,
+    val valueType: List<WebIDLLexer.Lexeme>?
+): WebIDLDefinition() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("iterable<")
-            .append(type)
-            .append(">")
+            .append(keyType.stringifyType())
+        if(valueType != null)
+            builder.append(", ").append(valueType.stringifyType())
+        builder.append(">")
     }
 }
 
 // async_iterable
-class IdlAsyncIterableLikeDef(
-    val type: String
-): IdlDefinition() {
+class WebIDLAsyncIterableLikeDef(
+    val keyType: List<WebIDLLexer.Lexeme>,
+    val valueType: List<WebIDLLexer.Lexeme>?
+): WebIDLDefinition() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("async_iterable<")
-            .append(type)
-            .append(">")
+            .append(keyType.stringifyType())
+        if(valueType != null)
+            builder.append(", ").append(valueType.stringifyType())
+        builder.append(">")
     }
 }
 
-class IdlMapLikeDef(
-    val keyType: String,
-    val valueType: String
-): IdlDefinition() {
+class WebIDLMapLikeDef(
+    val keyType: List<WebIDLLexer.Lexeme>,
+    val valueType: List<WebIDLLexer.Lexeme>,
+    val isReadOnly: Boolean
+): WebIDLDefinition() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("maplike<")
             .append(keyType)
@@ -332,9 +381,10 @@ class IdlMapLikeDef(
     }
 }
 
-class IdlSetLikeDef(
-    val type: String
-): IdlDefinition() {
+class WebIDLSetLikeDef(
+    val type: List<WebIDLLexer.Lexeme>,
+    val isReadOnly: Boolean
+): WebIDLDefinition() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("setlike<")
             .append(type)
@@ -342,24 +392,55 @@ class IdlSetLikeDef(
     }
 }
 
+class WebIDLStringifierDef(
+     val field: WebIDLFieldDef?
+): WebIDLDefinition() {
+    override fun toString(spaces: Int, builder: StringBuilder) {
+        builder.append("stringifier")
+        if(field != null) {
+            builder.append(" ")
+            field.toString(spaces, builder)
+        }
+    }
+}
+
+class WebIDLGetterDef(
+    val function: WebIDLFunctionDef
+): WebIDLDefinition() {
+    override fun toString(spaces: Int, builder: StringBuilder) {
+        builder.append("getter")
+            .append(" ")
+        function.toString(spaces, builder)
+    }
+}
+
+class WebIDLSetterDef(
+    val function: WebIDLFunctionDef
+): WebIDLDefinition() {
+    override fun toString(spaces: Int, builder: StringBuilder) {
+        builder.append("setter")
+            .append(" ")
+        function.toString(spaces, builder)
+    }
+}
 
 // extended attributes
-sealed class IdlExtendedAttributeDef: IdlDefinition() {
+sealed class WebIDLExtendedAttributeDef: WebIDLDefinition() {
     abstract val name: String
 }
 
-data class IdlExtendedAttributeDefNoArgs(
+data class WebIDLExtendedAttributeDefNoArgs(
     override val name: String
-): IdlExtendedAttributeDef() {
+): WebIDLExtendedAttributeDef() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append(name)
     }
 }
 
-data class IdlExtendedAttributeDefArgList(
+data class WebIDLExtendedAttributeDefArgList(
     override val name: String,
-    val args: List<IdlFieldDef>
-): IdlExtendedAttributeDef() {
+    val args: List<WebIDLFieldDef>
+): WebIDLExtendedAttributeDef() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append(name)
             .append("(")
@@ -372,11 +453,11 @@ data class IdlExtendedAttributeDefArgList(
     }
 }
 
-data class IdlExtendedAttributeDefNamedArgList(
+data class WebIDLExtendedAttributeDefNamedArgList(
     override val name: String,
-    val identifier: String,
-    val args: List<IdlFieldDef>
-): IdlExtendedAttributeDef() {
+    val identifier: List<WebIDLLexer.Lexeme>,
+    val args: List<WebIDLFieldDef>
+): WebIDLExtendedAttributeDef() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append(name)
             .append("=")
@@ -391,10 +472,10 @@ data class IdlExtendedAttributeDefNamedArgList(
     }
 }
 
-data class IdlExtendedAttributeDefIdent(
+data class WebIDLExtendedAttributeDefIdent(
     override val name: String,
     val identifier: String
-): IdlExtendedAttributeDef() {
+): WebIDLExtendedAttributeDef() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append(name)
             .append("=")
@@ -402,10 +483,10 @@ data class IdlExtendedAttributeDefIdent(
     }
 }
 
-data class IdlExtendedAttributeDefString(
+data class WebIDLExtendedAttributeDefString(
     override val name: String,
     val value: String
-): IdlExtendedAttributeDef() {
+): WebIDLExtendedAttributeDef() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append(name)
             .append("=")
@@ -413,10 +494,10 @@ data class IdlExtendedAttributeDefString(
     }
 }
 
-data class IdlExtendedAttributeDefInteger(
+data class WebIDLExtendedAttributeDefInteger(
     override val name: String,
     val value: Int
-): IdlExtendedAttributeDef() {
+): WebIDLExtendedAttributeDef() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append(name)
             .append("=")
@@ -424,10 +505,10 @@ data class IdlExtendedAttributeDefInteger(
     }
 }
 
-data class IdlExtendedAttributeDefDecimal(
+data class WebIDLExtendedAttributeDefDecimal(
     override val name: String,
     val value: Double
-): IdlExtendedAttributeDef() {
+): WebIDLExtendedAttributeDef() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append(name)
             .append("=")
@@ -435,10 +516,10 @@ data class IdlExtendedAttributeDefDecimal(
     }
 }
 
-data class IdlExtendedAttributeDefIntegerList(
+data class WebIDLExtendedAttributeDefIntegerList(
     override val name: String,
     val array: List<Int>
-): IdlExtendedAttributeDef() {
+): WebIDLExtendedAttributeDef() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append(name)
             .append("=(")
@@ -447,10 +528,10 @@ data class IdlExtendedAttributeDefIntegerList(
     }
 }
 
-data class IdlExtendedAttributeDefIdentList(
+data class WebIDLExtendedAttributeDefIdentList(
     override val name: String,
     val array: List<String>
-): IdlExtendedAttributeDef() {
+): WebIDLExtendedAttributeDef() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append(name)
             .append("=(")
@@ -459,9 +540,9 @@ data class IdlExtendedAttributeDefIdentList(
     }
 }
 
-data class IdlExtendedAttributeDefWildcard(
+data class WebIDLExtendedAttributeDefWildcard(
     override val name: String,
-): IdlExtendedAttributeDef() {
+): WebIDLExtendedAttributeDef() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append(name)
             .append("=*")

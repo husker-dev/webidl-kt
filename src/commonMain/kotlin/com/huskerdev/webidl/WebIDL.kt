@@ -1,97 +1,60 @@
 package com.huskerdev.webidl
 
-import com.huskerdev.webidl.ast.WebIDLBuiltin
-import com.huskerdev.webidl.ast.WebIDLDeclaration
-import com.huskerdev.webidl.ast.WebIDLDictionary
-import com.huskerdev.webidl.ast.WebIDLEnum
-import com.huskerdev.webidl.ast.WebIDLInterface
-import com.huskerdev.webidl.ast.WebIDLNamespace
-import com.huskerdev.webidl.ast.WebIDLTypeDef
-import com.huskerdev.webidl.def.IdlDefinitionRoot
-import com.huskerdev.webidl.def.IdlDictionaryDef
-import com.huskerdev.webidl.def.IdlEnumDef
-import com.huskerdev.webidl.def.IdlInterfaceDef
-import com.huskerdev.webidl.def.IdlNamespaceDef
-import com.huskerdev.webidl.def.IdlTypeDefDef
+import com.huskerdev.webidl.ast.WebIDLAST
+import com.huskerdev.webidl.parser.WebIDLParser
+import kotlin.jvm.JvmStatic
 
-class WebIDL(
-    val root: IdlDefinitionRoot,
-    val env: WebIDLEnv = WebIDLEnv.Default
-) {
-    val builtinTypes: Map<String, WebIDLBuiltin> = env.builtinTypes.mapValues {
-        WebIDLBuiltin(it.key, it.value)
-    }
+@Suppress("unused")
+class WebIDL {
+    companion object {
 
-    val interfaces: Map<String, WebIDLInterface>
-        field = linkedMapOf()
+        @JvmStatic
+        fun parseDefinitions(
+            iterator: Iterator<String>,
+            types: Set<String> = WebIDLEnv.Default.builtinTypes.keys
+        ) = WebIDLParser(iterator, types).parse()
 
-    val dictionaries: Map<String, WebIDLDictionary>
-        field = linkedMapOf()
+        @JvmStatic
+        fun parseDefinitions(
+            text: String,
+            types: Set<String> = WebIDLEnv.Default.builtinTypes.keys
+        ) = WebIDLParser(listOf(text).iterator(), types).parse()
 
-    val enums: Map<String, WebIDLEnum>
-        field = linkedMapOf()
+        @JvmStatic
+        fun parseDefinitions(
+            lineSequence: Sequence<String>,
+            types: Set<String> = WebIDLEnv.Default.builtinTypes.keys
+        ) = WebIDLParser(lineSequence.iterator(), types).parse()
 
-    val typeDefs: Map<String, WebIDLTypeDef>
-        field = linkedMapOf()
+        @JvmStatic
+        fun parseDefinitions(
+            lines: Iterable<String>,
+            types: Set<String> = WebIDLEnv.Default.builtinTypes.keys
+        ) = WebIDLParser(lines.iterator(), types).parse()
 
-    val namespaces: Map<String, WebIDLNamespace>
-        field = linkedMapOf()
 
-    constructor(
-        iterable: Iterator<String>,
-        env: WebIDLEnv = WebIDLEnv.Default
-    ): this(WebIDLParser.parse(iterable), env)
+        @JvmStatic
+        fun parseAST(
+            iterable: Iterator<String>,
+            env: WebIDLEnv = WebIDLEnv.Default
+        ) = WebIDLAST(parseDefinitions(iterable, env.builtinTypes.keys), env)
 
-    constructor(
-        text: String,
-        env: WebIDLEnv = WebIDLEnv.Default
-    ): this(WebIDLParser.parse(text), env)
+        @JvmStatic
+        fun parseAST(
+            text: String,
+            env: WebIDLEnv = WebIDLEnv.Default
+        ) = WebIDLAST(parseDefinitions(text, env.builtinTypes.keys), env)
 
-    constructor(
-        lineSequence: Sequence<String>,
-        env: WebIDLEnv = WebIDLEnv.Default
-    ): this(WebIDLParser.parse(lineSequence), env)
+        @JvmStatic
+        fun parseAST(
+            lineSequence: Sequence<String>,
+            env: WebIDLEnv = WebIDLEnv.Default
+        ) = WebIDLAST(parseDefinitions(lineSequence, env.builtinTypes.keys), env)
 
-    constructor(
-        lines: Iterable<String>,
-        env: WebIDLEnv = WebIDLEnv.Default
-    ): this(WebIDLParser.parse(lines), env)
-
-    init {
-        iterateTypeDeclarations()
-        resolveTypeDefs()
-    }
-
-    fun findDeclaration(name: String): WebIDLDeclaration {
-        return interfaces[name]
-            ?: dictionaries[name]
-            ?: enums[name]
-            ?: typeDefs[name]
-            ?: builtinTypes[name]
-            ?: throw UnsupportedOperationException("Type '$name' is not declared")
-    }
-
-    private fun iterateTypeDeclarations() {
-        root.definitions.forEach { def ->
-            when (def) {
-                is IdlInterfaceDef if(!def.isMixin && !def.isPartial) ->
-                    interfaces[def.name] = WebIDLInterface(def.name, def.isCallback)
-                is IdlDictionaryDef ->
-                    (dictionaries as MutableMap)[def.name] = WebIDLDictionary(def.name)
-                is IdlEnumDef ->
-                    (enums as MutableMap)[def.name] = WebIDLEnum(def.name)
-                is IdlNamespaceDef ->
-                    (namespaces as MutableMap)[def.name] = WebIDLNamespace(def.name)
-                is IdlTypeDefDef ->
-                    (typeDefs as MutableMap)[def.name] = WebIDLTypeDef(def.name)
-                else -> return@forEach
-            }
-        }
-    }
-
-    private fun resolveTypeDefs() {
-        typeDefs.values.forEach {
-            it.resolve(this)
-        }
+        @JvmStatic
+        fun parseAST(
+            lines: Iterable<String>,
+            env: WebIDLEnv = WebIDLEnv.Default
+        ) = WebIDLAST(parseDefinitions(lines, env.builtinTypes.keys), env)
     }
 }

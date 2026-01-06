@@ -1,15 +1,10 @@
 package com.huskerdev.webidl.ast
 
-import com.huskerdev.webidl.WebIDL
+import com.huskerdev.webidl.lexer.WebIDLLexer
 
 sealed interface WebIDLDeclaration {
     val nullable: Boolean
 }
-
-class WebIDLUnionType(
-    val types: List<WebIDLDeclaration>,
-    override val nullable: Boolean
-): WebIDLDeclaration
 
 class WebIDLBuiltin(
     val name: String,
@@ -24,6 +19,19 @@ class WebIDLInterface(
 ): WebIDLDeclaration {
     override val nullable = true
 
+    var implements: WebIDLInterface? = null
+
+    val fields = arrayListOf<WebIDLField>()
+
+    val staticFields = arrayListOf<WebIDLField>()
+
+    val functions = arrayListOf<WebIDLFunction>()
+
+    val staticFunctions = arrayListOf<WebIDLFunction>()
+
+    val constructors = arrayListOf<WebIDLConstructor>()
+
+
     var isIterable: Boolean = false
         private set
 
@@ -36,35 +44,46 @@ class WebIDLInterface(
     var isSet: Boolean = false
         private set
 
-    var iterableType: WebIDLDeclaration? = null
+    var iterableType: Pair<WebIDLType, WebIDLType?>? = null
         set(value) {
             field = value
             isIterable = value != null
         }
 
-    var asyncIterableType: WebIDLDeclaration? = null
+    var asyncIterableType: Pair<WebIDLType, WebIDLType?>? = null
         set(value) {
             field = value
             isAsyncIterable = value != null
         }
 
-    var mapType: Map.Entry<WebIDLDeclaration, WebIDLDeclaration>? = null
+    var mapType: Pair<WebIDLType, WebIDLType>? = null
         set(value) {
             field = value
             isMap = value != null
         }
 
-    var setType: WebIDLDeclaration? = null
+    var setType: WebIDLType? = null
         set(value) {
             field = value
             isSet = value != null
         }
+
+    fun applyMixin(mixin: WebIDLInterface){
+        fields += mixin.fields
+        functions += mixin.functions
+        iterableType = mixin.iterableType
+        asyncIterableType = mixin.asyncIterableType
+        mapType = mixin.mapType
+        setType = mixin.setType
+    }
 }
 
 class WebIDLDictionary(
     val name: String
 ): WebIDLDeclaration {
     override val nullable = true
+
+    val fields = arrayListOf<WebIDLField>()
 }
 
 class WebIDLEnum(
@@ -74,18 +93,39 @@ class WebIDLEnum(
 }
 
 class WebIDLTypeDef(
-    val name: String
+    val name: String,
+    val source: List<WebIDLLexer.Lexeme>
 ): WebIDLDeclaration {
-    lateinit var linked: WebIDLDeclaration
+    lateinit var linked: WebIDLType
         private set
 
-    override val nullable = linked.nullable
+    override var nullable = false
+        private set
 
-    fun resolve(idl: WebIDL) {
-        linked = idl.findDeclaration(name)
+    fun resolve(idl: WebIDLAST) {
+        linked = idl.findType(source)
+        nullable = linked.nullable
     }
 }
 
+class WebIDLCallback(
+    val name: String,
+): WebIDLDeclaration {
+    override val nullable = false
+
+    lateinit var type: WebIDLType
+    lateinit var args: List<WebIDLField>
+}
+
+class WebIDLNamespace(
+    val name: String
+): WebIDLDeclaration {
+    override val nullable: Boolean = false
+
+    val fields = arrayListOf<WebIDLField>()
+
+    val functions = arrayListOf<WebIDLFunction>()
+}
 
 enum class WebIDLBuiltinKind(
     val nullable: Boolean = false,

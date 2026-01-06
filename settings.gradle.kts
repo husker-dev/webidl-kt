@@ -4,12 +4,14 @@ rootProject.name = "web-idl-kt"
 pluginManagement {
     repositories {
         mavenCentral()
+        google()
     }
 }
 
 dependencyResolutionManagement {
     repositories {
         mavenCentral()
+        google()
     }
 
     versionCatalogs {
