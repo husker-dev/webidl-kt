@@ -1,9 +1,10 @@
 package com.huskerdev.webidl.lexer
 
 import com.huskerdev.webidl.WebIDLEnv
+import com.huskerdev.webidl.WebIDLParserException
 
 class WebIDLLexer(
-    val iterator: Iterator<String>,
+    val chars: Iterator<Char>,
     types: Set<String> = WebIDLEnv.Default.builtinTypes.keys
 ): Iterator<WebIDLLexer.Lexeme> {
 
@@ -54,14 +55,19 @@ class WebIDLLexer(
 
     data class Lexeme(
         val content: String,
-        val type: LexemeType
+        val type: LexemeType,
+        val line: String,
+        val lineIndex: Int,
+        val lineCharIndex: Int
     )
 
     val types = types.flatMap { it.split(" ") }.toSet()
 
-    private var hasNext = iterator.hasNext()
-    private var line = iterator.next()
-    private var index = 0
+    private var hasNext = chars.hasNext()
+    private var char = if(hasNext) chars.next() else '\n'
+
+    private val cachedLine = StringBuilder().append(char)
+    private var lineIndex = 0
 
     lateinit var current: Lexeme
         private set
@@ -74,67 +80,69 @@ class WebIDLLexer(
         }
     }
 
+    private fun throwException(message: String): Nothing =
+        throw WebIDLParserException(lineIndex, cachedLine, cachedLine.length, message)
+
     private fun nextChar(
         ignoreComment: Boolean = false
     ): Char {
-        if(index == line.lastIndex) {
-            if(!iterator.hasNext()) {
-                line = "\n"
-                index = 0
-                hasNext = false
-                return '\n'
-            }
-            line = iterator.next()
-            index = 0
-        } else
-            index++
+        if(char == ';' || char == '\n')
+            cachedLine.clear()
+        if(char == '\n')
+            lineIndex++
+
+        if(!chars.hasNext()) {
+            char = '\n'
+            hasNext = false
+            return '\n'
+        }
+        char = chars.next()
+        cachedLine.append(char)
 
         if(!ignoreComment)
             skipComments()
-        return currentChar()
+        return char
     }
-
-    private fun currentChar(): Char =
-        line[index]
 
     @Suppress("UnusedExpression")
     private fun skipComments(){
-        while(currentChar() == '/') {
+        while(char == '/') {
             nextChar(true)
-            when (currentChar()) {
-                '/' -> while(currentChar() != '\n')
+            when (char) {
+                '/' -> while(char != '\n')
                     nextChar(true)
                 '*' -> while(
                     nextChar(true) != '*' ||
                     nextChar(true) != '/'
                 ) Unit
             }
+            cachedLine.clear()
             nextChar(true)
         }
     }
 
     private fun skipSpaces(){
-        while(hasNext && currentChar() in spaces)
+        while(hasNext && char in spaces)
             nextChar()
     }
 
     private fun readString(builder: StringBuilder){
         builder.clear()
-        while (currentChar() != '\"' || builder.lastOrNull() == '\\') {
-            builder.append(currentChar())
+        while (char != '\"' || builder.lastOrNull() == '\\') {
+            builder.append(char)
             nextChar()
 
             // Check escape sequence
-            while(currentChar() == '\\') {
+            while(char == '\\') {
                 nextChar()
-                builder.append(when(currentChar()) {
+                builder.append(when(char) {
                     'n' -> '\n'
                     '\"' -> '"'
                     '\\' -> '\\'
                     'r' -> '\r'
                     't' -> '\t'
                     'b' -> '\b'
-                    else -> throw UnsupportedOperationException("Unsupported escape sequence (${currentChar()})")
+                    else -> throwException("Unsupported escape sequence")
                 })
                 nextChar()
             }
@@ -145,30 +153,29 @@ class WebIDLLexer(
     override fun hasNext(): Boolean = hasNext
 
     override fun next(): Lexeme {
-        val char = currentChar()
+        val firstCharIndex = cachedLine.length-1
+        val firstChar = char
         nextChar()
 
         val builder = StringBuilder()
-        builder.append(char)
+        builder.append(firstChar)
 
-        val type = when (char) {
+        val type = when (firstChar) {
 
             // Numbers (except 'Infinity' and 'NaN', but with '-Infinity')
             // Also contains ellipsis
             in digits, '-', '.' -> {
-                if(char == '.' && currentChar() !in digits) {
+                if(firstChar == '.' && char !in digits) {
                     // Ellipsis '...'
-                    if(currentChar() != '.')
-                        throw UnsupportedOperationException("Expected '...'")
-                    if(nextChar() != '.')
-                        throw UnsupportedOperationException("Expected '...'")
+                    if(char != '.' || nextChar() != '.')
+                        throwException("Expected '...'")
                     nextChar()
                     builder.append("..")
                     LexemeType.ELLIPSIS
                 } else {
                     // Number
-                    while (currentChar() == '.' || currentChar() !in splitters) {
-                        builder.append(currentChar())
+                    while (char == '.' || char !in splitters) {
+                        builder.append(char)
                         nextChar()
                     }
                     if ('.' in builder || builder.contentEquals("-Infinity"))
@@ -180,8 +187,8 @@ class WebIDLLexer(
 
             // Long words
             !in splitters -> {
-                while (currentChar() !in splitters) {
-                    builder.append(currentChar())
+                while (char !in splitters) {
+                    builder.append(char)
                     nextChar()
                 }
                 when (builder.toString()) {
@@ -197,7 +204,7 @@ class WebIDLLexer(
             }
 
             // Single-letter
-            in splitters -> when (char) {
+            in splitters -> when (firstChar) {
                 '<' -> LexemeType.L_ANGLE_BRACKET
                 '>' -> LexemeType.R_ANGLE_BRACKET
                 '(' -> LexemeType.L_ROUND_BRACKET
@@ -216,13 +223,13 @@ class WebIDLLexer(
                     readString(builder)
                     LexemeType.STRING
                 }
-                else -> throw UnsupportedOperationException("$char")
+                else -> throwException("Unexpected char")
             }
-            else -> throw UnsupportedOperationException("Unexpected letter")
+            else -> throwException("Unexpected token")
         }
         skipSpaces()
 
-        current = Lexeme(builder.toString(), type)
+        current = Lexeme(builder.toString(), type, cachedLine.toString(), lineIndex, firstCharIndex)
         return current
     }
 }

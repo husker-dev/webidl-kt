@@ -8,7 +8,7 @@ class LexerTest {
 
     @Test
     fun test(){
-        WebIDLLexer(listOf("""
+        WebIDLLexer("""
             // line-comment
             /* multi-line comment */
             
@@ -63,7 +63,7 @@ class LexerTest {
             -Infinity
             NaN
             
-        """.trimIndent()).iterator()).apply {
+        """.trimIndent().asSequence().iterator()).apply {
             mapOf(
                 WebIDLLexer.LexemeType.IDENTIFIER to "identifier",
                 WebIDLLexer.LexemeType.KEYWORD to "interface",

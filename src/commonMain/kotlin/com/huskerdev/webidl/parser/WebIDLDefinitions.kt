@@ -426,10 +426,12 @@ class WebIDLSetterDef(
 
 // extended attributes
 sealed class WebIDLExtendedAttributeDef: WebIDLDefinition() {
+    abstract val firstLexeme: WebIDLLexer.Lexeme
     abstract val name: String
 }
 
 data class WebIDLExtendedAttributeDefNoArgs(
+    override val firstLexeme: WebIDLLexer.Lexeme,
     override val name: String
 ): WebIDLExtendedAttributeDef() {
     override fun toString(spaces: Int, builder: StringBuilder) {
@@ -438,6 +440,7 @@ data class WebIDLExtendedAttributeDefNoArgs(
 }
 
 data class WebIDLExtendedAttributeDefArgList(
+    override val firstLexeme: WebIDLLexer.Lexeme,
     override val name: String,
     val args: List<WebIDLFieldDef>
 ): WebIDLExtendedAttributeDef() {
@@ -454,6 +457,7 @@ data class WebIDLExtendedAttributeDefArgList(
 }
 
 data class WebIDLExtendedAttributeDefNamedArgList(
+    override val firstLexeme: WebIDLLexer.Lexeme,
     override val name: String,
     val function: WebIDLFunctionDef
 ): WebIDLExtendedAttributeDef() {
@@ -465,6 +469,7 @@ data class WebIDLExtendedAttributeDefNamedArgList(
 }
 
 data class WebIDLExtendedAttributeDefIdent(
+    override val firstLexeme: WebIDLLexer.Lexeme,
     override val name: String,
     val identifier: String
 ): WebIDLExtendedAttributeDef() {
@@ -476,6 +481,7 @@ data class WebIDLExtendedAttributeDefIdent(
 }
 
 data class WebIDLExtendedAttributeDefString(
+    override val firstLexeme: WebIDLLexer.Lexeme,
     override val name: String,
     val value: String
 ): WebIDLExtendedAttributeDef() {
@@ -487,6 +493,7 @@ data class WebIDLExtendedAttributeDefString(
 }
 
 data class WebIDLExtendedAttributeDefInteger(
+    override val firstLexeme: WebIDLLexer.Lexeme,
     override val name: String,
     val value: Int
 ): WebIDLExtendedAttributeDef() {
@@ -498,6 +505,7 @@ data class WebIDLExtendedAttributeDefInteger(
 }
 
 data class WebIDLExtendedAttributeDefDecimal(
+    override val firstLexeme: WebIDLLexer.Lexeme,
     override val name: String,
     val value: Double
 ): WebIDLExtendedAttributeDef() {
@@ -509,6 +517,7 @@ data class WebIDLExtendedAttributeDefDecimal(
 }
 
 data class WebIDLExtendedAttributeDefIntegerList(
+    override val firstLexeme: WebIDLLexer.Lexeme,
     override val name: String,
     val array: List<Int>
 ): WebIDLExtendedAttributeDef() {
@@ -521,6 +530,7 @@ data class WebIDLExtendedAttributeDefIntegerList(
 }
 
 data class WebIDLExtendedAttributeDefIdentList(
+    override val firstLexeme: WebIDLLexer.Lexeme,
     override val name: String,
     val array: List<String>
 ): WebIDLExtendedAttributeDef() {
@@ -533,6 +543,7 @@ data class WebIDLExtendedAttributeDefIdentList(
 }
 
 data class WebIDLExtendedAttributeDefWildcard(
+    override val firstLexeme: WebIDLLexer.Lexeme,
     override val name: String,
 ): WebIDLExtendedAttributeDef() {
     override fun toString(spaces: Int, builder: StringBuilder) {

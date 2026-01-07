@@ -10,7 +10,7 @@ class WebIDL {
 
         @JvmStatic
         fun parseDefinitions(
-            iterator: Iterator<String>,
+            iterator: Iterator<Char>,
             types: Set<String> = WebIDLEnv.Default.builtinTypes.keys
         ) = WebIDLParser(iterator, types).parse()
 
@@ -18,24 +18,12 @@ class WebIDL {
         fun parseDefinitions(
             text: String,
             types: Set<String> = WebIDLEnv.Default.builtinTypes.keys
-        ) = WebIDLParser(listOf(text).iterator(), types).parse()
-
-        @JvmStatic
-        fun parseDefinitions(
-            lineSequence: Sequence<String>,
-            types: Set<String> = WebIDLEnv.Default.builtinTypes.keys
-        ) = WebIDLParser(lineSequence.iterator(), types).parse()
-
-        @JvmStatic
-        fun parseDefinitions(
-            lines: Iterable<String>,
-            types: Set<String> = WebIDLEnv.Default.builtinTypes.keys
-        ) = WebIDLParser(lines.iterator(), types).parse()
+        ) = WebIDLParser(text.asSequence().iterator(), types).parse()
 
 
         @JvmStatic
         fun parseAST(
-            iterable: Iterator<String>,
+            iterable: Iterator<Char>,
             env: WebIDLEnv = WebIDLEnv.Default
         ) = WebIDLAST(parseDefinitions(iterable, env.builtinTypes.keys), env)
 
@@ -45,16 +33,5 @@ class WebIDL {
             env: WebIDLEnv = WebIDLEnv.Default
         ) = WebIDLAST(parseDefinitions(text, env.builtinTypes.keys), env)
 
-        @JvmStatic
-        fun parseAST(
-            lineSequence: Sequence<String>,
-            env: WebIDLEnv = WebIDLEnv.Default
-        ) = WebIDLAST(parseDefinitions(lineSequence, env.builtinTypes.keys), env)
-
-        @JvmStatic
-        fun parseAST(
-            lines: Iterable<String>,
-            env: WebIDLEnv = WebIDLEnv.Default
-        ) = WebIDLAST(parseDefinitions(lines, env.builtinTypes.keys), env)
     }
 }
