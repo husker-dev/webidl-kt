@@ -69,6 +69,7 @@ data class WebIDLInterfaceDef(
         if(isCallback) builder.append("callback ")
         builder.append("interface ")
         if(isMixin) builder.append("mixin ")
+        builder.append(name).append(" ")
         if(implements != null) builder.append(": ").append(implements).append(" ")
         builder.append("{\n")
 
@@ -122,6 +123,7 @@ data class WebIDLDictionaryDef(
         printAttributes(builder)
         if(isPartial) builder.append("partial ")
         builder.append("dictionary ")
+        builder.append(name).append(" ")
         if(implements != null) builder.append(": ").append(implements).append(" ")
         builder.append("{\n")
 
