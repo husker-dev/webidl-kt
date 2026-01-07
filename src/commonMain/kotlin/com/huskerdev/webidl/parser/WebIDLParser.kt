@@ -24,10 +24,10 @@ class WebIDLParser(
                     "interface", -> parseInterface(attributes, modifiers)
                     "dictionary" -> parseDictionary(attributes, modifiers)
                     "namespace" -> parseNamespace(attributes, modifiers)
-                    "enum" -> parseEnum(attributes)
-                    "typedef" -> parseTypeDef(attributes)
+                    "enum" -> parseEnum(attributes, modifiers)
+                    "typedef" -> parseTypeDef(attributes, modifiers)
                     "callback" -> when(lexer.next().type) {
-                        WebIDLLexer.LexemeType.IDENTIFIER -> parseCallbackFunction(attributes)
+                        WebIDLLexer.LexemeType.IDENTIFIER -> parseCallbackFunction(attributes, modifiers)
                         else -> parseInterface(attributes, modifiers, isCallback = true)
                     }
                     else -> throw WebIDLUnexpectedSymbolException(lexer.current, lexer.current.content)
@@ -35,6 +35,7 @@ class WebIDLParser(
 
                 // includes/implements
                 WebIDLLexer.LexemeType.IDENTIFIER -> {
+                    modifiers.assertAllowed()
                     val identifier1 = lexer.current
 
                     val action = lexer.next()
@@ -188,7 +189,9 @@ class WebIDLParser(
 
     private fun parseCallbackFunction(
         attributes: List<WebIDLExtendedAttributeDef>,
+        modifiers: Modifiers
     ): WebIDLCallbackFunctionDef {
+        modifiers.assertAllowed()
         expectType(lexer.current, WebIDLLexer.LexemeType.IDENTIFIER)
         val name = lexer.current.content
 
@@ -206,7 +209,9 @@ class WebIDLParser(
 
     private fun parseTypeDef(
         attributes: List<WebIDLExtendedAttributeDef>,
+        modifiers: Modifiers
     ): WebIDLTypeDefDef {
+        modifiers.assertAllowed()
         lexer.next()
         val type = parseType()
 
@@ -223,7 +228,9 @@ class WebIDLParser(
 
     private fun parseEnum(
         attributes: List<WebIDLExtendedAttributeDef>,
+        modifiers: Modifiers
     ): WebIDLEnumDef {
+        modifiers.assertAllowed()
         expectType(lexer.next(), WebIDLLexer.LexemeType.IDENTIFIER)
         val name = lexer.current.content
 
@@ -301,9 +308,11 @@ class WebIDLParser(
         val definitions = walkDefinitionsBlock { attributes, modifiers ->
             when(lexer.current.content) {
                 "iterable" -> parseGeneric().run {
+                    modifiers.assertAllowed()
                     WebIDLIterableDef(get(0), getOrNull(1))
                 }
                 "async_iterable" -> parseGeneric().run {
+                    modifiers.assertAllowed()
                     WebIDLAsyncIterableLikeDef(get(0), getOrNull(1))
                 }
                 "maplike" -> parseGeneric().run {
@@ -315,6 +324,7 @@ class WebIDLParser(
                     WebIDLSetLikeDef(this[0], modifiers.get("readonly"))
                 }
                 "stringifier" -> {
+                    modifiers.assertAllowed()
                     val nextLexeme = lexer.next()
                     val field = if(nextLexeme.type != WebIDLLexer.LexemeType.SEMICOLON) {
                         walkDefinitionsBlock(brackets = false, onlyOne = true) { attributes, modifiers ->
@@ -333,6 +343,7 @@ class WebIDLParser(
                     WebIDLStringifierDef(field)
                 }
                 "getter" -> {
+                    modifiers.assertAllowed()
                     val nextLexeme = lexer.next()
                     val function = walkDefinitionsBlock(brackets = false, onlyOne = true) { attributes, modifiers ->
                         parseFieldOrFunction(
@@ -346,6 +357,7 @@ class WebIDLParser(
                     WebIDLGetterDef(function)
                 }
                 "setter" -> {
+                    modifiers.assertAllowed()
                     val nextLexeme = lexer.next()
                     val function = walkDefinitionsBlock(brackets = false, onlyOne = true) { attributes, modifiers ->
                         parseFieldOrFunction(
@@ -359,6 +371,7 @@ class WebIDLParser(
                     WebIDLSetterDef(function)
                 }
                 "constructor" -> {
+                    modifiers.assertAllowed()
                     expectType(lexer.next(), WebIDLLexer.LexemeType.L_ROUND_BRACKET)
                     lexer.next()
                     WebIDLConstructorDef(parseArguments(), attributes)
