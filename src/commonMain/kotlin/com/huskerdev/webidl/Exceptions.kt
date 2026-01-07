@@ -45,3 +45,13 @@ class WebIDLUnexpectedSymbolException(
     lexeme: WebIDLLexer.Lexeme,
     content: String
 ): WebIDLParserException(lexeme, "Unexpected symbol: $content")
+
+
+internal fun expectType(
+    lexeme: WebIDLLexer.Lexeme,
+    type: WebIDLLexer.LexemeType,
+    typeString: String = type.word
+){
+    if(lexeme.type != type)
+        throw WebIDLWrongSymbolException(lexeme, typeString)
+}

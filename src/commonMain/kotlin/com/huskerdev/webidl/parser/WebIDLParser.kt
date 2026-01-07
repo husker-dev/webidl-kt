@@ -4,50 +4,10 @@ import com.huskerdev.webidl.WebIDLUnexpectedSymbolException
 import com.huskerdev.webidl.WebIDLEnv
 import com.huskerdev.webidl.WebIDLParserException
 import com.huskerdev.webidl.WebIDLWrongSymbolException
+import com.huskerdev.webidl.expectType
 import com.huskerdev.webidl.lexer.WebIDLLexer
 
 
-private val modifiers = setOf(
-    "partial", "readonly", "attribute",
-    "const", "static", "inherit", "optional"
-)
-
-
-private fun expectType(
-    lexeme: WebIDLLexer.Lexeme,
-    type: WebIDLLexer.LexemeType,
-    typeString: String = type.word
-){
-    if(lexeme.type != type)
-        throw WebIDLWrongSymbolException(lexeme, typeString)
-}
-
-private open class Modifiers(
-    val lexemes: List<WebIDLLexer.Lexeme>
-) {
-    object EMPTY: Modifiers(emptyList())
-
-    init {
-        lexemes.forEach { modifier ->
-            val collected = lexemes.filter { it.content == modifier.content }
-            if(collected.size > 1)
-                throw WebIDLParserException(collected[1], "Duplicate modifier")
-        }
-    }
-
-    fun assertAllowed(vararg allowed: String){
-        val allowed = hashSetOf(*allowed)
-        val remain = lexemes.filter { it.content !in allowed }
-        if(remain.isNotEmpty())
-            throw WebIDLParserException(remain[0], "Modifier '${remain[0]}' is not allowed here")
-    }
-
-    operator fun get(modifier: String): WebIDLLexer.Lexeme? =
-        lexemes.firstOrNull { it.content == modifier }
-
-    operator fun contains(modifier: String): Boolean =
-        lexemes.any { it.content == modifier }
-}
 
 class WebIDLParser(
     iterator: Iterator<Char>,
@@ -214,7 +174,7 @@ class WebIDLParser(
         modifiers: Modifiers
     ): WebIDLNamespaceDef {
         modifiers.assertAllowed("partial")
-        val isPartial = "partial" in modifiers
+        val isPartial = modifiers.get("partial")
 
         expectType(lexer.next(), WebIDLLexer.LexemeType.IDENTIFIER)
         val name = lexer.current.content
@@ -289,7 +249,7 @@ class WebIDLParser(
         modifiers: Modifiers
     ): WebIDLDictionaryDef {
         modifiers.assertAllowed("partial")
-        val isPartial = "partial" in modifiers
+        val isPartial = modifiers.get("partial")
 
         expectType(lexer.next(), WebIDLLexer.LexemeType.IDENTIFIER)
         val name = lexer.current.content
@@ -319,7 +279,7 @@ class WebIDLParser(
         isCallback: Boolean = false,
     ): WebIDLInterfaceDef {
         modifiers.assertAllowed("partial")
-        val isPartial = "partial" in modifiers
+        val isPartial = modifiers.get("partial")
 
         val isMixin = if(lexer.next().content == "mixin"){
             if(isCallback)
@@ -348,11 +308,11 @@ class WebIDLParser(
                 }
                 "maplike" -> parseGeneric().run {
                     modifiers.assertAllowed("readonly")
-                    WebIDLMapLikeDef(this[0], this[1], "readonly" in modifiers)
+                    WebIDLMapLikeDef(this[0], this[1], modifiers.get("readonly"))
                 }
                 "setlike" -> parseGeneric().run {
                     modifiers.assertAllowed("readonly")
-                    WebIDLSetLikeDef(this[0], "readonly" in modifiers)
+                    WebIDLSetLikeDef(this[0], modifiers.get("readonly"))
                 }
                 "stringifier" -> {
                     val nextLexeme = lexer.next()
@@ -457,21 +417,13 @@ class WebIDLParser(
         allowAnonymous: Boolean = false
     ): WebIDLDefinition {
         modifiers.assertAllowed("static", "readonly", "attribute", "inherit", "const", "optional", "required")
-        val isStatic = "static" in modifiers
-        val isReadonly = "readonly" in modifiers
-        val isAttribute = "attribute" in modifiers
-        val isInherit = "inherit" in modifiers
-        val isConst = "const" in modifiers
-        val isOptional = "optional" in modifiers
-        val isRequired = "required" in modifiers
-
-        if(isStatic && !allowStatic)       throw WebIDLParserException(modifiers["static"]!!, "'static' is not allowed here")
-        if(isReadonly && !allowReadonly)   throw WebIDLParserException(modifiers["readonly"]!!, "'readonly' is not allowed here")
-        if(isAttribute && !allowAttribute) throw WebIDLParserException(modifiers["attribute"]!!, "'attribute' is not allowed here")
-        if(isInherit && !allowInherit)     throw WebIDLParserException(modifiers["inherit"]!!, "'inherit' is not allowed here")
-        if(isConst && !allowConst)         throw WebIDLParserException(modifiers["const"]!!, "'const' is not allowed here")
-        if(isOptional && !allowOptional)   throw WebIDLParserException(modifiers["optional"]!!, "'optional' is not allowed here")
-        if(isRequired && !allowRequired)   throw WebIDLParserException(modifiers["required"]!!, "'required' is not allowed here")
+        val isStatic = modifiers.get("static", allowStatic)
+        val isReadonly = modifiers.get("readonly", allowReadonly)
+        val isAttribute = modifiers.get("attribute", allowAttribute)
+        val isInherit = modifiers.get("inherit", allowInherit)
+        val isConst = modifiers.get("const", allowConst)
+        val isOptional = modifiers.get("optional", allowOptional)
+        val isRequired = modifiers.get("required", allowRequired)
 
         val type = parseType()
 
@@ -518,8 +470,8 @@ class WebIDLParser(
 
             WebIDLFieldDef(
                 name, type, value,
-                isAttribute, isStatic, isReadonly,
-                isInherit, isOptional, isConst, isVariadic,
+                isAttribute, isStatic, isReadonly, isInherit,
+                isOptional, isConst, isVariadic, isRequired,
                 attributes
             )
         }

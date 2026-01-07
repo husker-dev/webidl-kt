@@ -277,6 +277,7 @@ data class WebIDLFieldDef(
     val isOptional: Boolean,
     val isConst: Boolean,
     val isVariadic: Boolean,
+    val isRequired: Boolean,
     override val attributes: List<WebIDLExtendedAttributeDef>
 ): WebIDLDefinition(), IdlAttributedHolder {
     override fun toString(spaces: Int, builder: StringBuilder) {
@@ -287,6 +288,7 @@ data class WebIDLFieldDef(
         if(isOptional) builder.append("optional ")
         if(isConst) builder.append("const ")
         if(isAttribute) builder.append("attribute ")
+        if(isRequired) builder.append("required")
         builder.append(type)
         if(isVariadic)
             builder.append("...")

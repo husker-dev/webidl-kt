@@ -21,6 +21,7 @@ fun assertField(
     isOptional: Boolean = false,
     isConst: Boolean = false,
     isVariadic: Boolean = false,
+    isRequired: Boolean = false,
     block: WebIDLFieldDef.() -> Unit = {}
 ) {
     contract { returns() implies (def is WebIDLFieldDef) }
@@ -41,6 +42,7 @@ fun assertField(
     assertEquals(isInherit, def.isInherit, "expected 'inherit'")
     assertEquals(isOptional, def.isOptional, "expected 'optional'")
     assertEquals(isConst, def.isConst, "expected 'const'")
+    assertEquals(isRequired, def.isRequired, "expected 'required'")
     assertEquals(isVariadic, def.isVariadic, "expected '...'")
 
     block(def)
