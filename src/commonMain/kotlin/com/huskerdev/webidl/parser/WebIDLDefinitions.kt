@@ -15,6 +15,12 @@ sealed class WebIDLDefinition {
         toString(2)
 }
 
+sealed class WebIDLDefinitionContainer<T: WebIDLDefinition>: WebIDLDefinition() {
+    val definitions = ArrayList<T>()
+}
+
+sealed class WebIDLSimpleDefinitionContainer: WebIDLDefinitionContainer<WebIDLDefinition>()
+
 sealed interface IdlAttributedHolder {
     val attributes: List<WebIDLExtendedAttributeDef>
 
@@ -37,9 +43,7 @@ sealed interface IdlAttributedHolder {
     }
 }
 
-class WebIDLDefinitionRoot(
-    val definitions: List<WebIDLDefinition>
-): WebIDLDefinition() {
+class WebIDLDefinitionRoot: WebIDLSimpleDefinitionContainer() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         definitions.forEachIndexed { index, def ->
             if(index != 0)
@@ -56,9 +60,8 @@ data class WebIDLInterfaceDef(
     val isMixin: Boolean,
     val isCallback: Boolean,
     val implements: String?,
-    val definitions: List<WebIDLDefinition>,
     override val attributes: List<WebIDLExtendedAttributeDef>
-): WebIDLDefinition(), IdlAttributedHolder {
+): WebIDLSimpleDefinitionContainer(), IdlAttributedHolder {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("\n")
         printAttributes(builder)
@@ -85,9 +88,8 @@ data class WebIDLInterfaceDef(
 data class WebIDLNamespaceDef(
     val name: String,
     val isPartial: Boolean,
-    val definitions: List<WebIDLDefinition>,
     override val attributes: List<WebIDLExtendedAttributeDef>
-): WebIDLDefinition(), IdlAttributedHolder {
+): WebIDLSimpleDefinitionContainer(), IdlAttributedHolder {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("\n")
         printAttributes(builder)
@@ -113,9 +115,8 @@ data class WebIDLDictionaryDef(
     val name: String,
     val implements: String?,
     val isPartial: Boolean,
-    val definitions: List<WebIDLDefinition>,
     override val attributes: List<WebIDLExtendedAttributeDef>
-): WebIDLDefinition(), IdlAttributedHolder {
+): WebIDLSimpleDefinitionContainer(), IdlAttributedHolder {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("\n")
         printAttributes(builder)
@@ -173,9 +174,8 @@ data class WebIDLTypeDefDef(
 // enum
 data class WebIDLEnumDef(
     val name: String,
-    val elements: List<String>,
     override val attributes: List<WebIDLExtendedAttributeDef>
-): WebIDLDefinition(), IdlAttributedHolder {
+): WebIDLDefinitionContainer<WebIDLEnumElementDef>(), IdlAttributedHolder {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("\n")
         printAttributes(builder)
@@ -183,17 +183,26 @@ data class WebIDLEnumDef(
             .append(name)
             .append(" {\n")
 
-        val indent = " ".repeat(spaces)
-        elements.forEachIndexed { index, element ->
-            builder.append(indent)
-                .append("\"")
-                .append(element)
-                .append("\"")
-            if(index != element.lastIndex)
+
+        definitions.forEachIndexed { index, element ->
+            element.toString(spaces, builder)
+            if(index != definitions.lastIndex)
                 builder.append(",")
             builder.append("\n")
         }
         builder.append("};")
+    }
+}
+
+data class WebIDLEnumElementDef(
+    val name: String
+): WebIDLDefinition() {
+    override fun toString(spaces: Int, builder: StringBuilder) {
+        val indent = " ".repeat(spaces)
+        builder.append(indent)
+            .append("\"")
+            .append(name)
+            .append("\"")
     }
 }
 

@@ -1,6 +1,7 @@
 package com.huskerdev.webidl
 
 import com.huskerdev.webidl.lexer.WebIDLLexer
+import kotlin.math.max
 
 
 open class WebIDLParserException(
@@ -25,10 +26,9 @@ open class WebIDLParserException(
             append("Syntax error at line ")
             append(lineIndex+1)
             append(":\n")
-
             append(line)
             append('\n')
-            append(" ".repeat(lineCharIndex-1))
+            append(" ".repeat(max(0, lineCharIndex-1)))
             append("^ ")
             append(message)
             append('\n')

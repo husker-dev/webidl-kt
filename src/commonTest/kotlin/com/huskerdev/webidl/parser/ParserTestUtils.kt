@@ -171,7 +171,7 @@ fun assertEnum(
     assertIs<WebIDLEnumDef>(def)
 
     assertEquals(name, def.name, "name mismatch")
-    assertContentEquals(elements, def.elements)
+    assertContentEquals(elements, def.definitions.map { it.name })
 }
 
 @OptIn(ExperimentalContracts::class)

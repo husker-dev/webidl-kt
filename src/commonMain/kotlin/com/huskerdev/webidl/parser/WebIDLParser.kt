@@ -11,12 +11,16 @@ import com.huskerdev.webidl.lexer.WebIDLLexer
 
 class WebIDLParser(
     iterator: Iterator<Char>,
-    types: Set<String> = WebIDLEnv.Default.builtinTypes.keys
+    val consumer: WebIDLParserConsumer,
+    types: Set<String> = WebIDLEnv.Default.builtinTypes.keys,
 ) {
     private val lexer = WebIDLLexer(iterator, types)
 
-    fun parse(): WebIDLDefinitionRoot {
-        return WebIDLDefinitionRoot(walkDefinitionsBlock(false) { attributes, modifiers ->
+    fun parse() {
+        walkDefinitionsBlock(
+            WebIDLDefinitionRoot(),
+            false
+        ) { attributes, modifiers ->
             when(lexer.current.type) {
 
                 // Definitions
@@ -34,146 +38,45 @@ class WebIDLParser(
                 }
 
                 // includes/implements
-                WebIDLLexer.LexemeType.IDENTIFIER -> {
-                    modifiers.assertAllowed()
-                    val identifier1 = lexer.current
+                WebIDLLexer.LexemeType.IDENTIFIER ->
+                    parseImplements(modifiers)
 
-                    val action = lexer.next()
-                    if(action.content != "includes" && action.content != "implements")
-                        throw WebIDLWrongSymbolException(action, "includes' or 'implements")
-
-                    val identifier2 = lexer.next()
-                    expectType(identifier2, WebIDLLexer.LexemeType.IDENTIFIER)
-                    lexer.next()
-
-                    when (action.content) {
-                        "includes" -> WebIDLIncludesDef(identifier1.content, identifier2.content)
-                        "implements" -> WebIDLImplementsDef(identifier1.content, identifier2.content)
-                        else -> throw UnsupportedOperationException()
-                    }
-                }
                 else -> throw WebIDLUnexpectedSymbolException(lexer.current, lexer.current.content)
             }
-        })
+        }
     }
 
     private fun walkDefinitionsBlock(
+        parent: WebIDLDefinitionContainer<*>,
         brackets: Boolean = true,
-        onlyOne: Boolean = false,
-        onDefinition: (attributes: List<WebIDLExtendedAttributeDef>, modifiers: Modifiers) -> WebIDLDefinition
-    ): List<WebIDLDefinition> {
+        onDefinition: (attributes: List<WebIDLExtendedAttributeDef>, modifiers: Modifiers) -> Unit
+    ) {
         if(brackets) {
             expectType(lexer.current, WebIDLLexer.LexemeType.L_CURLY_BRACKET)
             lexer.next()
         }
 
-        return buildList {
-            var curModifiers = arrayListOf<WebIDLLexer.Lexeme>()
-            var curAttributes = emptyList<WebIDLExtendedAttributeDef>()
+        consumer.enter(parent)
+        while (lexer.hasNext() && lexer.current.type != WebIDLLexer.LexemeType.R_CURLY_BRACKET) {
+            val attributes = parseExtendedAttributes()
+            val modifiers = parseModifiers()
 
-            while (lexer.hasNext() && lexer.current.type != WebIDLLexer.LexemeType.R_CURLY_BRACKET) {
-                when {
-                    lexer.current.type == WebIDLLexer.LexemeType.L_SQUARE_BRACKET -> {
-                        if (curModifiers.isNotEmpty())
-                            throw WebIDLParserException(lexer.current, "Can not use attributes after modifiers")
-                        curAttributes = parseExtendedAttributes()
-                    }
+            onDefinition(attributes, modifiers)
 
-                    lexer.current.content in modifiers -> {
-                        curModifiers += lexer.current
-                        lexer.next()
-                    }
-
-                    else -> {
-                        this += onDefinition(curAttributes, Modifiers(curModifiers))
-
-                        if(onlyOne)
-                            return@buildList
-
-                        expectType(lexer.current, WebIDLLexer.LexemeType.SEMICOLON)
-                        if(lexer.hasNext())
-                            lexer.next()
-
-                        curModifiers = arrayListOf()
-                        curAttributes = arrayListOf()
-                    }
-                }
-            }
+            expectType(lexer.current, WebIDLLexer.LexemeType.SEMICOLON)
             if(lexer.hasNext())
                 lexer.next()
         }
-    }
+        consumer.exit()
 
-    private fun parseType(): WebIDLType {
-        val result = when (lexer.current.type) {
-
-            // identifier
-            WebIDLLexer.LexemeType.IDENTIFIER -> {
-                val name = lexer.current.content
-                lexer.next()
-                WebIDLIdentifierType(name)
-            }
-
-            // union type
-            WebIDLLexer.LexemeType.L_ROUND_BRACKET -> {
-                lexer.next()
-                val types = buildList {
-                    while (lexer.current.type != WebIDLLexer.LexemeType.R_ROUND_BRACKET) {
-                        add(parseType())
-                        if (lexer.current.content == "or")
-                            lexer.next()
-                    }
-                }
-                lexer.next()
-                WebIDLUnionType(types)
-            }
-
-            // builtin-types
-            WebIDLLexer.LexemeType.TYPE -> {
-                val firstLexeme = lexer.current
-                when (lexer.next().type) {
-                    // generics (sequence<T>, record<K, V>)
-                    WebIDLLexer.LexemeType.L_ANGLE_BRACKET -> {
-                        lexer.next()
-                        val types = buildList {
-                            while (lexer.current.type != WebIDLLexer.LexemeType.R_ANGLE_BRACKET) {
-                                add(parseType())
-                                if (lexer.current.type == WebIDLLexer.LexemeType.COMMA)
-                                    lexer.next()
-                            }
-                        }
-                        lexer.next()
-                        WebIDLGenericType(firstLexeme.content, types)
-                    }
-
-                    // long types
-                    WebIDLLexer.LexemeType.TYPE -> {
-                        val type = buildList {
-                            add(firstLexeme.content)
-                            add(lexer.current.content)
-                            while(lexer.next().type == WebIDLLexer.LexemeType.TYPE)
-                                add(lexer.current.content)
-                        }.joinToString(" ")
-                        WebIDLDefaultType(type)
-                    }
-
-                    // simple types
-                    else -> WebIDLDefaultType(firstLexeme.content)
-                }
-            }
-            else -> throw WebIDLWrongSymbolException(lexer.current, WebIDLLexer.LexemeType.TYPE.word)
-        }
-        if(lexer.current.type == WebIDLLexer.LexemeType.QUESTION) {
-            result.nullable = true
+        if(lexer.hasNext())
             lexer.next()
-        }
-        return result
     }
 
     private fun parseNamespace(
         attributes: List<WebIDLExtendedAttributeDef>,
         modifiers: Modifiers
-    ): WebIDLNamespaceDef {
+    ) {
         modifiers.assertAllowed("partial")
         val isPartial = modifiers.get("partial")
 
@@ -181,16 +84,21 @@ class WebIDLParser(
         val name = lexer.current.content
         lexer.next()
 
-        val definitions = walkDefinitionsBlock { attributes, modifiers ->
-            parseFieldOrFunction(attributes, modifiers, allowReadonly = true, allowAttribute = true)
+        walkDefinitionsBlock(
+            WebIDLNamespaceDef(name, isPartial, attributes)
+        ) { attributes, modifiers ->
+            consumer.consume(parseFieldOrFunction(
+                attributes, modifiers,
+                allowReadonly = true,
+                allowAttribute = true
+            ))
         }
-        return WebIDLNamespaceDef(name, isPartial, definitions, attributes)
     }
 
     private fun parseCallbackFunction(
         attributes: List<WebIDLExtendedAttributeDef>,
         modifiers: Modifiers
-    ): WebIDLCallbackFunctionDef {
+    ) {
         modifiers.assertAllowed()
         expectType(lexer.current, WebIDLLexer.LexemeType.IDENTIFIER)
         val name = lexer.current.content
@@ -204,13 +112,13 @@ class WebIDLParser(
         if(function !is WebIDLFunctionDef || function.name.isNotEmpty())
             throw WebIDLWrongSymbolException(equals, "Expected anonymous function")
 
-        return WebIDLCallbackFunctionDef(name, function, attributes)
+        consumer.consume(WebIDLCallbackFunctionDef(name, function, attributes))
     }
 
     private fun parseTypeDef(
         attributes: List<WebIDLExtendedAttributeDef>,
         modifiers: Modifiers
-    ): WebIDLTypeDefDef {
+    ) {
         modifiers.assertAllowed()
         lexer.next()
         val type = parseType()
@@ -219,17 +127,13 @@ class WebIDLParser(
         val name = lexer.current.content
         lexer.next()
 
-        return WebIDLTypeDefDef(
-            name,
-            type,
-            attributes
-        )
+        consumer.consume(WebIDLTypeDefDef(name, type, attributes))
     }
 
     private fun parseEnum(
         attributes: List<WebIDLExtendedAttributeDef>,
         modifiers: Modifiers
-    ): WebIDLEnumDef {
+    ) {
         modifiers.assertAllowed()
         expectType(lexer.next(), WebIDLLexer.LexemeType.IDENTIFIER)
         val name = lexer.current.content
@@ -237,24 +141,23 @@ class WebIDLParser(
         expectType(lexer.next(), WebIDLLexer.LexemeType.L_CURLY_BRACKET)
         lexer.next()
 
-        val elements = arrayListOf<String>()
-
+        consumer.enter(WebIDLEnumDef(name, attributes))
         while(lexer.current.type != WebIDLLexer.LexemeType.R_CURLY_BRACKET) {
             expectType(lexer.current, WebIDLLexer.LexemeType.STRING)
 
-            elements += lexer.current.content
+            consumer.consume(WebIDLEnumElementDef(lexer.current.content))
 
             if(lexer.next().type == WebIDLLexer.LexemeType.COMMA)
                 lexer.next()
         }
+        consumer.exit()
         lexer.next()
-        return WebIDLEnumDef(name, elements, attributes)
     }
 
     private fun parseDictionary(
         attributes: List<WebIDLExtendedAttributeDef>,
         modifiers: Modifiers
-    ): WebIDLDictionaryDef {
+    ) {
         modifiers.assertAllowed("partial")
         val isPartial = modifiers.get("partial")
 
@@ -268,23 +171,24 @@ class WebIDLParser(
             }
         } else null
 
-        val definitions = walkDefinitionsBlock { attributes, modifiers ->
+        walkDefinitionsBlock(
+            WebIDLDictionaryDef(name, implements, isPartial, attributes)
+        ) { attributes, modifiers ->
             if(attributes.isNotEmpty())
                 throw WebIDLParserException(attributes[0].firstLexeme, "Dictionary members can not have attributes")
-            parseFieldOrFunction(
+            consumer.consume(parseFieldOrFunction(
                 attributes, modifiers,
                 allowOptional = true,
                 allowRequired = true
-            )
+            ))
         }
-        return WebIDLDictionaryDef(name, implements, isPartial, definitions, attributes)
     }
 
     private fun parseInterface(
         attributes: List<WebIDLExtendedAttributeDef>,
         modifiers: Modifiers,
         isCallback: Boolean = false,
-    ): WebIDLInterfaceDef {
+    ) {
         modifiers.assertAllowed("partial")
         val isPartial = modifiers.get("partial")
 
@@ -305,8 +209,14 @@ class WebIDLParser(
             }
         } else null
 
-        val definitions = walkDefinitionsBlock { attributes, modifiers ->
-            when(lexer.current.content) {
+        walkDefinitionsBlock(
+            WebIDLInterfaceDef(
+                name,
+                isPartial, isMixin, isCallback,
+                implements, attributes
+            )
+        ) { attributes, modifiers ->
+            consumer.consume(when(lexer.current.content) {
                 "iterable" -> parseGeneric().run {
                     modifiers.assertAllowed()
                     WebIDLIterableDef(get(0), getOrNull(1))
@@ -325,48 +235,45 @@ class WebIDLParser(
                 }
                 "stringifier" -> {
                     modifiers.assertAllowed()
-                    val nextLexeme = lexer.next()
-                    val field = if(nextLexeme.type != WebIDLLexer.LexemeType.SEMICOLON) {
-                        walkDefinitionsBlock(brackets = false, onlyOne = true) { attributes, modifiers ->
-                            parseFieldOrFunction(
-                                attributes, modifiers,
-                                allowInherit = true,
-                                allowAttribute = true,
-                                allowReadonly = true
-                            )
-                        }[0]
+                    val firstLexeme = lexer.next()
+
+                    val field = if(firstLexeme.type != WebIDLLexer.LexemeType.SEMICOLON) {
+                        parseFieldOrFunction(
+                            emptyList(), parseModifiers(),
+                            allowInherit = true,
+                            allowAttribute = true,
+                            allowReadonly = true
+                        )
                     } else null
 
                     if(field != null && field !is WebIDLFieldDef)
-                        throw WebIDLParserException(nextLexeme, "Expected field")
+                        throw WebIDLParserException(firstLexeme, "Expected field")
 
                     WebIDLStringifierDef(field)
                 }
                 "getter" -> {
                     modifiers.assertAllowed()
-                    val nextLexeme = lexer.next()
-                    val function = walkDefinitionsBlock(brackets = false, onlyOne = true) { attributes, modifiers ->
-                        parseFieldOrFunction(
-                            attributes, modifiers,
-                            allowAnonymous = true
-                        )
-                    }[0]
+                    val firstLexeme = lexer.next()
+
+                    val function = parseFieldOrFunction(
+                        emptyList(), parseModifiers(),
+                        allowAnonymous = true
+                    )
                     if(function !is WebIDLFunctionDef)
-                        throw WebIDLParserException(nextLexeme, "Expected function")
+                        throw WebIDLParserException(firstLexeme, "Expected function")
 
                     WebIDLGetterDef(function)
                 }
                 "setter" -> {
                     modifiers.assertAllowed()
-                    val nextLexeme = lexer.next()
-                    val function = walkDefinitionsBlock(brackets = false, onlyOne = true) { attributes, modifiers ->
-                        parseFieldOrFunction(
-                            attributes, modifiers,
-                            allowAnonymous = true
-                        )
-                    }[0]
+                    val firstLexeme = lexer.next()
+
+                    val function = parseFieldOrFunction(
+                        emptyList(), parseModifiers(),
+                        allowAnonymous = true
+                    )
                     if(function !is WebIDLFunctionDef)
-                        throw WebIDLParserException(nextLexeme, "Expected function")
+                        throw WebIDLParserException(firstLexeme, "Expected function")
 
                     WebIDLSetterDef(function)
                 }
@@ -386,33 +293,27 @@ class WebIDLParser(
                         allowReadonly = true
                     )
                 }
-            }
+            })
         }
-
-        return WebIDLInterfaceDef(
-            name,
-            isPartial, isMixin, isCallback,
-            implements,
-            definitions,
-            attributes
-        )
     }
 
-    private fun parseGeneric(): List<WebIDLType> {
-        val list = arrayListOf<WebIDLType>()
+    private fun parseImplements(modifiers: Modifiers){
+        modifiers.assertAllowed()
+        val identifier1 = lexer.current
 
-        expectType(lexer.next(), WebIDLLexer.LexemeType.L_ANGLE_BRACKET)
+        val action = lexer.next()
+        if(action.content != "includes" && action.content != "implements")
+            throw WebIDLWrongSymbolException(action, "includes' or 'implements")
+
+        val identifier2 = lexer.next()
+        expectType(identifier2, WebIDLLexer.LexemeType.IDENTIFIER)
         lexer.next()
 
-        while(lexer.current.type != WebIDLLexer.LexemeType.R_ANGLE_BRACKET) {
-            list += parseType()
-            if(lexer.current.type == WebIDLLexer.LexemeType.COMMA)
-                lexer.next()
-        }
-
-        expectType(lexer.current, WebIDLLexer.LexemeType.R_ANGLE_BRACKET)
-        expectType(lexer.next(), WebIDLLexer.LexemeType.SEMICOLON)
-        return list
+        consumer.consume(when (action.content) {
+            "includes" -> WebIDLIncludesDef(identifier1.content, identifier2.content)
+            "implements" -> WebIDLImplementsDef(identifier1.content, identifier2.content)
+            else -> throw UnsupportedOperationException()
+        })
     }
 
     private fun parseFieldOrFunction(
@@ -493,21 +394,115 @@ class WebIDLParser(
     private fun parseArguments(): List<WebIDLFieldDef> = buildList {
         val firstLexeme = lexer.current
         while (lexer.current.type != WebIDLLexer.LexemeType.R_ROUND_BRACKET) {
-            this@buildList += walkDefinitionsBlock(brackets = false, onlyOne = true) { attributes, modifiers ->
-                parseFieldOrFunction(attributes, modifiers,
-                    allowOptional = true,
-                    allowVariadic = true
-                )
-            }.map {
-                it as? WebIDLFieldDef ?: throw WebIDLParserException(firstLexeme, "Expected field")
-            }
+            val attributes = parseExtendedAttributes()
+            val modifiers = parseModifiers()
+            val field = parseFieldOrFunction(attributes, modifiers,
+                allowOptional = true,
+                allowVariadic = true
+            ) as? WebIDLFieldDef
+                ?: throw WebIDLParserException(firstLexeme, "Expected field")
+            add(field)
+
             if (lexer.current.type == WebIDLLexer.LexemeType.COMMA)
                 lexer.next()
         }
         lexer.next()
     }
 
+    private fun parseModifiers() = Modifiers(buildList {
+        while(lexer.current.content in modifiers) {
+            add(lexer.current)
+            lexer.next()
+        }
+    })
+
+    private fun parseType(): WebIDLType {
+        val result = when (lexer.current.type) {
+
+            // identifier
+            WebIDLLexer.LexemeType.IDENTIFIER -> {
+                val name = lexer.current.content
+                lexer.next()
+                WebIDLIdentifierType(name)
+            }
+
+            // union type
+            WebIDLLexer.LexemeType.L_ROUND_BRACKET -> {
+                lexer.next()
+                val types = buildList {
+                    while (lexer.current.type != WebIDLLexer.LexemeType.R_ROUND_BRACKET) {
+                        add(parseType())
+                        if (lexer.current.content == "or")
+                            lexer.next()
+                    }
+                }
+                lexer.next()
+                WebIDLUnionType(types)
+            }
+
+            // builtin-types
+            WebIDLLexer.LexemeType.TYPE -> {
+                val firstLexeme = lexer.current
+                when (lexer.next().type) {
+                    // generics (sequence<T>, record<K, V>)
+                    WebIDLLexer.LexemeType.L_ANGLE_BRACKET -> {
+                        lexer.next()
+                        val types = buildList {
+                            while (lexer.current.type != WebIDLLexer.LexemeType.R_ANGLE_BRACKET) {
+                                add(parseType())
+                                if (lexer.current.type == WebIDLLexer.LexemeType.COMMA)
+                                    lexer.next()
+                            }
+                        }
+                        lexer.next()
+                        WebIDLGenericType(firstLexeme.content, types)
+                    }
+
+                    // long types
+                    WebIDLLexer.LexemeType.TYPE -> {
+                        val type = buildList {
+                            add(firstLexeme.content)
+                            add(lexer.current.content)
+                            while(lexer.next().type == WebIDLLexer.LexemeType.TYPE)
+                                add(lexer.current.content)
+                        }.joinToString(" ")
+                        WebIDLDefaultType(type)
+                    }
+
+                    // simple types
+                    else -> WebIDLDefaultType(firstLexeme.content)
+                }
+            }
+            else -> throw WebIDLWrongSymbolException(lexer.current, WebIDLLexer.LexemeType.TYPE.word)
+        }
+        if(lexer.current.type == WebIDLLexer.LexemeType.QUESTION) {
+            result.nullable = true
+            lexer.next()
+        }
+        return result
+    }
+
+    private fun parseGeneric(): List<WebIDLType> {
+        val list = arrayListOf<WebIDLType>()
+
+        expectType(lexer.next(), WebIDLLexer.LexemeType.L_ANGLE_BRACKET)
+        lexer.next()
+
+        while(lexer.current.type != WebIDLLexer.LexemeType.R_ANGLE_BRACKET) {
+            list += parseType()
+            if(lexer.current.type == WebIDLLexer.LexemeType.COMMA)
+                lexer.next()
+        }
+
+        expectType(lexer.current, WebIDLLexer.LexemeType.R_ANGLE_BRACKET)
+        expectType(lexer.next(), WebIDLLexer.LexemeType.SEMICOLON)
+        return list
+    }
+
     private fun parseExtendedAttributes(): List<WebIDLExtendedAttributeDef> = buildList {
+        if (lexer.current.type != WebIDLLexer.LexemeType.L_SQUARE_BRACKET)
+            return@buildList
+
         val firstLexeme = lexer.current
         lexer.next()
         while (lexer.current.type != WebIDLLexer.LexemeType.R_SQUARE_BRACKET) {
