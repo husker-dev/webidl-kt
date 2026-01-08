@@ -54,7 +54,7 @@ WebIDL.streamDefinitions("""
 
 Constructor can also accept an `Iterator<Char>`.
 
-This creates a way to pass in a data stream (for example, a file) and read it char-by-char.
+So it is possible to work with a data stream (for example, a file).
   
 > For working with files, the JVM part of this library has a special helper class that converts an `Reader` to an `Iterator<Char>`
 
