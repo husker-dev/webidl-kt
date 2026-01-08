@@ -10,8 +10,10 @@ class Files {
 
     @Test
     fun test() {
+        val stream = this::class.java.getResourceAsStream("/someFile.idl")!!
+
         WebIDL.parseDefinitions(
-            this::class.java.getResourceAsStream("/someFile.idl")!!.iterator()
+            stream.reader().buffered().iterator()
         ).apply {
             assertEquals(1, definitions.size)
 

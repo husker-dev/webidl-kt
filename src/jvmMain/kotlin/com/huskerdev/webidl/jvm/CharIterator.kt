@@ -1,21 +1,22 @@
 package com.huskerdev.webidl.jvm
 
 import java.io.File
-import java.io.InputStream
+import java.io.Reader
+import java.nio.charset.Charset
 
 
-class InputStreamIterator(
-    stream: InputStream,
-    bufferSize: Int = DEFAULT_BUFFER_SIZE
+class CharIterator(
+    val reader: Reader
 ): Iterator<Char> {
 
+    @Suppress("unused")
     constructor(
         file: File,
+        charset: Charset = Charsets.UTF_8,
         bufferSize: Int = DEFAULT_BUFFER_SIZE
-    ): this(file.inputStream(), bufferSize)
+    ): this(file.bufferedReader(charset, bufferSize))
 
-    private val reader = stream.buffered(bufferSize)
-    private var nextChar = stream.read()
+    private var nextChar = reader.read()
 
     override fun hasNext(): Boolean = nextChar != -1
 
@@ -30,6 +31,4 @@ class InputStreamIterator(
     }
 }
 
-fun InputStream.iterator(
-    bufferSize: Int = DEFAULT_BUFFER_SIZE
-) = InputStreamIterator(this, bufferSize)
+fun Reader.iterator() = CharIterator(this)
