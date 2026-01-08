@@ -9,7 +9,7 @@ Small and optimized library with streaming parsing capabilities, as well as type
 
 ```kotlin
 dependencies {
-    implementation 'com.huskerdev:webidl-kt:1.0.0'
+    implementation("com.huskerdev:webidl-kt:1.0.0")
 }
 ```
 
