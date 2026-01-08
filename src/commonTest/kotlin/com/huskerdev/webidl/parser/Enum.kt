@@ -50,7 +50,7 @@ class Enum {
 
                 assertField(definitions[0], "type", "MealType", isAttribute = true)
                 assertField(definitions[1], "size", "double", isAttribute = true)
-                assertFunction(definitions[2], "initialize", "undefined", argsCount = 2) {
+                assertOperation(definitions[2], "initialize", "undefined", argsCount = 2) {
                     assertField(args[0], "type", "MealType")
                     assertField(args[1], "size", "double")
                 }

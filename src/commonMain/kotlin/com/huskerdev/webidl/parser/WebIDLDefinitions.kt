@@ -139,10 +139,10 @@ data class WebIDLDictionaryDef(
     }
 }
 
-// callback function
+// callback operation
 data class WebIDLCallbackFunctionDef(
     val name: String,
-    val function: WebIDLFunctionDef,
+    val operation: WebIDLOperationDef,
     override val attributes: List<WebIDLExtendedAttributeDef>
 ): WebIDLDefinition(), IdlAttributedHolder {
     override fun toString(spaces: Int, builder: StringBuilder) {
@@ -151,7 +151,7 @@ data class WebIDLCallbackFunctionDef(
         builder.append("callback ")
             .append(name)
             .append(" = ")
-        function.toString(spaces, builder)
+        operation.toString(spaces, builder)
         builder.append(";")
     }
 }
@@ -253,8 +253,8 @@ data class WebIDLConstructorDef(
     }
 }
 
-// function
-data class WebIDLFunctionDef(
+// operation
+data class WebIDLOperationDef(
     val name: String,
     val type: WebIDLType,
     val args: List<WebIDLFieldDef>,
@@ -418,22 +418,22 @@ class WebIDLStringifierDef(
 }
 
 class WebIDLGetterDef(
-    val function: WebIDLFunctionDef
+    val operation: WebIDLOperationDef
 ): WebIDLDefinition() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("getter")
             .append(" ")
-        function.toString(spaces, builder)
+        operation.toString(spaces, builder)
     }
 }
 
 class WebIDLSetterDef(
-    val function: WebIDLFunctionDef
+    val operation: WebIDLOperationDef
 ): WebIDLDefinition() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append("setter")
             .append(" ")
-        function.toString(spaces, builder)
+        operation.toString(spaces, builder)
     }
 }
 
@@ -472,12 +472,12 @@ data class WebIDLExtendedAttributeDefArgList(
 data class WebIDLExtendedAttributeDefNamedArgList(
     override val firstLexeme: WebIDLLexer.Lexeme,
     override val name: String,
-    val function: WebIDLFunctionDef
+    val operation: WebIDLOperationDef
 ): WebIDLExtendedAttributeDef() {
     override fun toString(spaces: Int, builder: StringBuilder) {
         builder.append(name)
             .append("=")
-        function.toString(spaces, builder)
+        operation.toString(spaces, builder)
     }
 }
 

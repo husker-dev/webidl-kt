@@ -127,11 +127,11 @@ class InterfaceMembers {
             ) {
                 assertAttributeIdent(attributes[0], "Exposed", "Window")
 
-                assertFunction(definitions[0], "isMouseOver", "boolean", argsCount = 0)
-                assertFunction(definitions[1], "setDimensions", "undefined", argsCount = 1) {
+                assertOperation(definitions[0], "isMouseOver", "boolean", argsCount = 0)
+                assertOperation(definitions[1], "setDimensions", "undefined", argsCount = 1) {
                     assertField(args[0], "size", "Dimensions")
                 }
-                assertFunction(definitions[2], "setDimensions", "undefined", argsCount = 2) {
+                assertOperation(definitions[2], "setDimensions", "undefined", argsCount = 2) {
                     assertField(args[0], "width", "long")
                     assertField(args[1], "height", "long")
                 }
@@ -161,10 +161,10 @@ class InterfaceMembers {
                 assertAttributeIdent(attributes[0], "Exposed", "Window")
 
                 assertField(definitions[0], "cardinality", "long", isAttribute = true, isReadOnly = true)
-                assertFunction(definitions[1], "union", "undefined", argsCount = 1) {
+                assertOperation(definitions[1], "union", "undefined", argsCount = 1) {
                     assertField(args[0], "ints", "long", isVariadic = true)
                 }
-                assertFunction(definitions[2], "intersection", "undefined", argsCount = 1) {
+                assertOperation(definitions[2], "intersection", "undefined", argsCount = 1) {
                     assertField(args[0], "ints", "long", isVariadic = true)
                 }
             }
@@ -186,11 +186,11 @@ class InterfaceMembers {
                 implements = null,
                 definitions = 2
             ) {
-                assertFunction(definitions[0], "identifier1", "void", argsCount = 2) {
+                assertOperation(definitions[0], "identifier1", "void", argsCount = 2) {
                     assertField(args[0], "arg1", "int")
                     assertField(args[1], "arg2", "DOMString", isOptional = true)
                 }
-                assertFunction(definitions[1], "identifier2", "void", argsCount = 2) {
+                assertOperation(definitions[1], "identifier2", "void", argsCount = 2) {
                     assertField(args[0], "arg1", "int")
                     assertField(args[1], "arg2", "DOMString", isOptional = true, value = "\"value\"")
                 }
@@ -227,7 +227,7 @@ class InterfaceMembers {
             ) {
                 assertAttributeIdent(attributes[0], "Exposed", "Window")
 
-                assertFunction(definitions[0], "hasAddressForName", "boolean", argsCount = 2) {
+                assertOperation(definitions[0], "hasAddressForName", "boolean", argsCount = 2) {
                     assertField(args[0], "name", "USVString")
                     assertField(args[1], "options", "LookupOptions", isOptional = true, value = "{}")
                 }
@@ -322,12 +322,12 @@ class InterfaceMembers {
                 definitions = 2
             ) {
                 assertGetter(definitions[0]) {
-                    assertFunction(function, "", "double", argsCount = 1) {
+                    assertOperation(operation, "", "double", argsCount = 1) {
                         assertField(args[0], "propertyName", "DOMString")
                     }
                 }
                 assertSetter(definitions[1]) {
-                    assertFunction(function, "", "undefined", argsCount = 2) {
+                    assertOperation(operation, "", "undefined", argsCount = 2) {
                         assertField(args[0], "propertyName", "DOMString")
                         assertField(args[1], "propertyValue", "double")
                     }
@@ -339,12 +339,12 @@ class InterfaceMembers {
                 definitions = 2
             ) {
                 assertGetter(definitions[0]) {
-                    assertFunction(function, "getProperty", "double", argsCount = 1) {
+                    assertOperation(operation, "getProperty", "double", argsCount = 1) {
                         assertField(args[0], "propertyName", "DOMString")
                     }
                 }
                 assertSetter(definitions[1]) {
-                    assertFunction(function, "setProperty", "undefined", argsCount = 2) {
+                    assertOperation(operation, "setProperty", "undefined", argsCount = 2) {
                         assertField(args[0], "propertyName", "DOMString")
                         assertField(args[1], "propertyValue", "double")
                     }
@@ -392,7 +392,7 @@ class InterfaceMembers {
                 assertField(definitions[2], "radius", "double", isAttribute = true)
                 assertField(definitions[3], "triangulationCount", "long",
                     isAttribute = true, isReadOnly = true, isStatic = true)
-                assertFunction(definitions[4], "triangulate", "Point", argsCount = 3, isStatic = true) {
+                assertOperation(definitions[4], "triangulate", "Point", argsCount = 3, isStatic = true) {
                     assertField(args[0], "c1", "Circle")
                     assertField(args[1], "c2", "Circle")
                     assertField(args[2], "c3", "Circle")
@@ -416,10 +416,10 @@ class InterfaceMembers {
                 implements = null,
                 definitions = 2
             ) {
-                assertFunction(definitions[0], "f", "undefined", argsCount = 1) {
+                assertOperation(definitions[0], "f", "undefined", argsCount = 1) {
                     assertField(args[0], "w", "DOMString")
                 }
-                assertFunction(definitions[1], "f", "undefined", argsCount = 4) {
+                assertOperation(definitions[1], "f", "undefined", argsCount = 4) {
                     assertField(args[0], "w", "long")
                     assertField(args[1], "x", "double")
                     assertField(args[2], "y", "Node")

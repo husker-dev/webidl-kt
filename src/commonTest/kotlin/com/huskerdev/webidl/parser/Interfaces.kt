@@ -31,8 +31,8 @@ class Interfaces {
                 attributes = 1
             ) {
                 assertAttributeIdent(attributes[0], "Exposed", "Window")
-                assertFunction(definitions[0], "f", "undefined", argsCount = 0)
-                assertFunction(definitions[1], "g", "undefined", argsCount = 0)
+                assertOperation(definitions[0], "f", "undefined", argsCount = 0)
+                assertOperation(definitions[1], "g", "undefined", argsCount = 0)
             }
             assertInterface(definitions[1],
                 name = "B",
@@ -41,8 +41,8 @@ class Interfaces {
                 attributes = 1
             ) {
                 assertAttributeIdent(attributes[0], "Exposed", "Window")
-                assertFunction(definitions[0], "f", "undefined", argsCount = 0)
-                assertFunction(definitions[1], "g", "undefined", argsCount = 1) {
+                assertOperation(definitions[0], "f", "undefined", argsCount = 0)
+                assertOperation(definitions[1], "g", "undefined", argsCount = 1) {
                     assertField(args[0], "x", "DOMString")
                 }
             }
@@ -81,7 +81,7 @@ class Interfaces {
                 assertField(definitions[1], "identifier", "int", attributes = 1, isAttribute = true) {
                     assertAttribute(attributes[0], "extended_attributes")
                 }
-                assertFunction(definitions[2], "identifier", "int", argsCount = 0, attributes = 1) {
+                assertOperation(definitions[2], "identifier", "int", argsCount = 0, attributes = 1) {
                     assertAttribute(attributes[0], "extended_attributes")
                 }
             }
@@ -190,10 +190,10 @@ class Interfaces {
                 assertAttributeIdent(attributes[0], "Exposed", "Window")
                 assertField(definitions[0], "nodeName", "DOMString", isAttribute = true, isReadOnly = true)
                 assertField(definitions[1], "parentNode", "Node?", isAttribute = true, isReadOnly = true)
-                assertFunction(definitions[2], "appendChild", "Node", argsCount = 1) {
+                assertOperation(definitions[2], "appendChild", "Node", argsCount = 1) {
                     assertField(args[0], "newChild", "Node")
                 }
-                assertFunction(definitions[3], "addEventListener", "undefined", argsCount = 2) {
+                assertOperation(definitions[3], "addEventListener", "undefined", argsCount = 2) {
                     assertField(args[0], "type", "DOMString")
                     assertField(args[1], "listener", "EventListener")
                 }
@@ -204,7 +204,7 @@ class Interfaces {
                 definitions = 1,
                 isCallback = true
             ) {
-                assertFunction(definitions[0], "handleEvent", "undefined", argsCount = 1) {
+                assertOperation(definitions[0], "handleEvent", "undefined", argsCount = 1) {
                     assertField(args[0], "event", "Event")
                 }
             }

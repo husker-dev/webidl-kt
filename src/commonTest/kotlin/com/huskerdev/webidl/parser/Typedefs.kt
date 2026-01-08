@@ -65,10 +65,10 @@ class Typedefs {
             ) {
                 assertAttributeIdent(attributes[0], "Exposed", "Window")
 
-                assertFunction(definitions[0], "pointWithinBounds", "boolean", argsCount = 1) {
+                assertOperation(definitions[0], "pointWithinBounds", "boolean", argsCount = 1) {
                     assertField(args[0], "p", "Point")
                 }
-                assertFunction(definitions[1], "allPointsWithinBounds", "boolean", argsCount = 1) {
+                assertOperation(definitions[1], "allPointsWithinBounds", "boolean", argsCount = 1) {
                     assertField(args[0], "ps", "Points")
                 }
             }

@@ -1,7 +1,6 @@
 package com.huskerdev.webidl.ast
 
 import com.huskerdev.webidl.WebIDLEnv
-import com.huskerdev.webidl.lexer.WebIDLLexer
 import com.huskerdev.webidl.parser.WebIDLAsyncIterableLikeDef
 import com.huskerdev.webidl.parser.WebIDLCallbackFunctionDef
 import com.huskerdev.webidl.parser.WebIDLConstructorDef
@@ -9,7 +8,7 @@ import com.huskerdev.webidl.parser.WebIDLDefinitionRoot
 import com.huskerdev.webidl.parser.WebIDLDictionaryDef
 import com.huskerdev.webidl.parser.WebIDLEnumDef
 import com.huskerdev.webidl.parser.WebIDLFieldDef
-import com.huskerdev.webidl.parser.WebIDLFunctionDef
+import com.huskerdev.webidl.parser.WebIDLOperationDef
 import com.huskerdev.webidl.parser.WebIDLImplementsDef
 import com.huskerdev.webidl.parser.WebIDLIncludesDef
 import com.huskerdev.webidl.parser.WebIDLInterfaceDef
@@ -123,7 +122,7 @@ class WebIDLAST(
                             is WebIDLFieldDef ->
                                 (if(decl.isStatic) inter.staticFields else inter.fields) += decl.toDeclarationField()
 
-                            is WebIDLFunctionDef ->
+                            is WebIDLOperationDef ->
                                 (if(decl.isStatic) inter.staticFunctions else inter.functions) += decl.toFunction()
 
                             is WebIDLConstructorDef -> {
@@ -148,8 +147,8 @@ class WebIDLAST(
                 }
                 is WebIDLCallbackFunctionDef -> {
                     val callback = callbacks[decl.name]!!
-                    callback.type = findType(decl.function.type)
-                    callback.args = decl.function.args.map { it.toArgField() }
+                    callback.type = findType(decl.operation.type)
+                    callback.args = decl.operation.args.map { it.toArgField() }
                 }
                 is WebIDLNamespaceDef -> {
                     val namespace = namespaces[decl.name]!!
@@ -158,7 +157,7 @@ class WebIDLAST(
                         when(decl) {
                             is WebIDLFieldDef ->
                                 namespace.fields += decl.toDeclarationField()
-                            is WebIDLFunctionDef ->
+                            is WebIDLOperationDef ->
                                 namespace.functions += decl.toFunction()
                             else -> throw UnsupportedOperationException("Unexpected definition")
                         }
@@ -206,7 +205,7 @@ class WebIDLAST(
     )
 
 
-    private fun WebIDLFunctionDef.toFunction() = WebIDLFunction(
+    private fun WebIDLOperationDef.toFunction() = WebIDLFunction(
         name,
         findType(type),
         args.map { it.toArgField() },

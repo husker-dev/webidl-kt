@@ -87,7 +87,7 @@ class WebIDLParser(
         walkDefinitionsBlock(
             WebIDLNamespaceDef(name, isPartial, attributes)
         ) { attributes, modifiers ->
-            consumer.consume(parseFieldOrFunction(
+            consumer.consume(parseFieldOrOperation(
                 attributes, modifiers,
                 allowReadonly = true,
                 allowAttribute = true
@@ -107,12 +107,12 @@ class WebIDLParser(
         expectType(equals, WebIDLLexer.LexemeType.EQUALS)
         lexer.next()
 
-        val function = parseFieldOrFunction(attributes, Modifiers.EMPTY, allowAnonymous = true)
+        val operation = parseFieldOrOperation(attributes, Modifiers.EMPTY, allowAnonymous = true)
 
-        if(function !is WebIDLFunctionDef || function.name.isNotEmpty())
-            throw WebIDLWrongSymbolException(equals, "Expected anonymous function")
+        if(operation !is WebIDLOperationDef || operation.name.isNotEmpty())
+            throw WebIDLWrongSymbolException(equals, "Expected anonymous operation")
 
-        consumer.consume(WebIDLCallbackFunctionDef(name, function, attributes))
+        consumer.consume(WebIDLCallbackFunctionDef(name, operation, attributes))
     }
 
     private fun parseTypeDef(
@@ -176,7 +176,7 @@ class WebIDLParser(
         ) { attributes, modifiers ->
             if(attributes.isNotEmpty())
                 throw WebIDLParserException(attributes[0].firstLexeme, "Dictionary members can not have attributes")
-            consumer.consume(parseFieldOrFunction(
+            consumer.consume(parseFieldOrOperation(
                 attributes, modifiers,
                 allowOptional = true,
                 allowRequired = true
@@ -238,7 +238,7 @@ class WebIDLParser(
                     val firstLexeme = lexer.next()
 
                     val field = if(firstLexeme.type != WebIDLLexer.LexemeType.SEMICOLON) {
-                        parseFieldOrFunction(
+                        parseFieldOrOperation(
                             emptyList(), parseModifiers(),
                             allowInherit = true,
                             allowAttribute = true,
@@ -255,27 +255,27 @@ class WebIDLParser(
                     modifiers.assertAllowed()
                     val firstLexeme = lexer.next()
 
-                    val function = parseFieldOrFunction(
+                    val operation = parseFieldOrOperation(
                         emptyList(), parseModifiers(),
                         allowAnonymous = true
                     )
-                    if(function !is WebIDLFunctionDef)
-                        throw WebIDLParserException(firstLexeme, "Expected function")
+                    if(operation !is WebIDLOperationDef)
+                        throw WebIDLParserException(firstLexeme, "Expected operation")
 
-                    WebIDLGetterDef(function)
+                    WebIDLGetterDef(operation)
                 }
                 "setter" -> {
                     modifiers.assertAllowed()
                     val firstLexeme = lexer.next()
 
-                    val function = parseFieldOrFunction(
+                    val operation = parseFieldOrOperation(
                         emptyList(), parseModifiers(),
                         allowAnonymous = true
                     )
-                    if(function !is WebIDLFunctionDef)
-                        throw WebIDLParserException(firstLexeme, "Expected function")
+                    if(operation !is WebIDLOperationDef)
+                        throw WebIDLParserException(firstLexeme, "Expected operation")
 
-                    WebIDLSetterDef(function)
+                    WebIDLSetterDef(operation)
                 }
                 "constructor" -> {
                     modifiers.assertAllowed()
@@ -284,7 +284,7 @@ class WebIDLParser(
                     WebIDLConstructorDef(parseArguments(), attributes)
                 }
                 else -> {
-                    parseFieldOrFunction(
+                    parseFieldOrOperation(
                         attributes, modifiers,
                         allowConst = true,
                         allowStatic = true,
@@ -316,7 +316,7 @@ class WebIDLParser(
         })
     }
 
-    private fun parseFieldOrFunction(
+    private fun parseFieldOrOperation(
         attributes: List<WebIDLExtendedAttributeDef>,
         modifiers: Modifiers,
 
@@ -360,10 +360,10 @@ class WebIDLParser(
             }
         } else ""
 
-        // Field or Function
+        // Field or Operation
         return if(lexer.current.type == WebIDLLexer.LexemeType.L_ROUND_BRACKET) {
             lexer.next()
-            WebIDLFunctionDef(name, type, parseArguments(), isStatic, attributes)
+            WebIDLOperationDef(name, type, parseArguments(), isStatic, attributes)
         } else {
             // value
             val value = if(lexer.current.type == WebIDLLexer.LexemeType.EQUALS) {
@@ -396,7 +396,7 @@ class WebIDLParser(
         while (lexer.current.type != WebIDLLexer.LexemeType.R_ROUND_BRACKET) {
             val attributes = parseExtendedAttributes()
             val modifiers = parseModifiers()
-            val field = parseFieldOrFunction(attributes, modifiers,
+            val field = parseFieldOrOperation(attributes, modifiers,
                 allowOptional = true,
                 allowVariadic = true
             ) as? WebIDLFieldDef
@@ -553,11 +553,11 @@ class WebIDLParser(
                                 // [LegacyFactoryFunction=Image(DOMString src)]
                                 else -> {
                                     val firstLexeme = lexer.current
-                                    val function = parseFieldOrFunction(emptyList(), Modifiers.EMPTY, allowAnonymous = true)
-                                    if(function !is WebIDLFunctionDef || function.name.isNotEmpty())
-                                        throw WebIDLParserException(firstLexeme, "Expected anonymous function")
+                                    val operation = parseFieldOrOperation(emptyList(), Modifiers.EMPTY, allowAnonymous = true)
+                                    if(operation !is WebIDLOperationDef || operation.name.isNotEmpty())
+                                        throw WebIDLParserException(firstLexeme, "Expected anonymous operation")
 
-                                    WebIDLExtendedAttributeDefNamedArgList(firstLexeme, name, function)
+                                    WebIDLExtendedAttributeDefNamedArgList(firstLexeme, name, operation)
                                 }
                             }
                         }

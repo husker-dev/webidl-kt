@@ -50,7 +50,7 @@ class Types {
                 definitions = 26
             ) {
                 types.forEachIndexed { index, string ->
-                    assertFunction(definitions[index], "a", string, 0)
+                    assertOperation(definitions[index], "a", string, 0)
                 }
             }
         }

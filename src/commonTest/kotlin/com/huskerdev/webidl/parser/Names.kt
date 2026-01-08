@@ -58,7 +58,7 @@ class Names {
                 elements = listOf("enum", "values")
             )
             assertCallbackFunction(definitions[7], "callback_identifier") {
-                assertFunction(function, "", "void", argsCount = 0)
+                assertOperation(operation, "", "void", argsCount = 0)
             }
             assertInterface(definitions[8],
                 name = "callback_interface_identifier",
@@ -141,7 +141,7 @@ class Names {
                 implements = null,
                 definitions = 1
             ) {
-                assertFunction(definitions[0], "operation_identifier", "int", argsCount = 0)
+                assertOperation(definitions[0], "operation_identifier", "int", argsCount = 0)
             }
         }
     }
@@ -161,7 +161,7 @@ class Names {
                 implements = null,
                 definitions = 1
             ) {
-                assertFunction(definitions[0], "operation_identifier", "int", argsCount = 1) {
+                assertOperation(definitions[0], "operation_identifier", "int", argsCount = 1) {
                     assertField(args[0], "argument_identifier", "int")
                 }
             }
@@ -193,7 +193,7 @@ class Names {
             ) {
                 assertAttributeIdent(attributes[0], "Exposed", "Window")
 
-                assertFunction(definitions[0], "f", "undefined", argsCount = 1) {
+                assertOperation(definitions[0], "f", "undefined", argsCount = 1) {
                     assertField(args[0], "x", "SequenceOfLongs")
                 }
             }
@@ -254,14 +254,14 @@ class Names {
             ) {
                 assertAttributeIdent(attributes[0], "Exposed", "Window")
 
-                assertFunction(definitions[0], "createObject", "object", argsCount = 1) {
+                assertOperation(definitions[0], "createObject", "object", argsCount = 1) {
                     assertField(args[0], "_interface", "DOMString")
                 }
-                assertFunction(definitions[1], "getObjects", "sequence<object>", argsCount = 1) {
+                assertOperation(definitions[1], "getObjects", "sequence<object>", argsCount = 1) {
                     assertField(args[0], "interface", "DOMString")
                 }
                 assertGetter(definitions[2]) {
-                    assertFunction(function, "", "DOMString", argsCount = 1) {
+                    assertOperation(operation, "", "DOMString", argsCount = 1) {
                         assertField(args[0], "keyName", "DOMString")
                     }
                 }

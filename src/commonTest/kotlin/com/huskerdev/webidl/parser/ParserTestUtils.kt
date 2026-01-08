@@ -49,18 +49,18 @@ fun assertField(
 }
 
 @OptIn(ExperimentalContracts::class)
-fun assertFunction(
+fun assertOperation(
     def: WebIDLDefinition,
     name: String,
     type: String,
     argsCount: Int,
     isStatic: Boolean = false,
     attributes: Int = 0,
-    block: WebIDLFunctionDef.() -> Unit = {}
+    block: WebIDLOperationDef.() -> Unit = {}
 ){
-    contract { returns() implies (def is WebIDLFunctionDef) }
+    contract { returns() implies (def is WebIDLOperationDef) }
 
-    assertIs<WebIDLFunctionDef>(def)
+    assertIs<WebIDLOperationDef>(def)
 
     assertEquals(name, def.name)
     assertEquals(type, def.type.toString())

@@ -56,11 +56,11 @@ class Namespaces {
                 definitions = 3
             ) {
                 assertField(definitions[0], "unit", "Vector", isAttribute = true, isReadOnly = true)
-                assertFunction(definitions[1], "dotProduct", "double", argsCount = 2) {
+                assertOperation(definitions[1], "dotProduct", "double", argsCount = 2) {
                     assertField(args[0], "x", "Vector")
                     assertField(args[1], "y", "Vector")
                 }
-                assertFunction(definitions[2], "crossProduct", "Vector", argsCount = 2) {
+                assertOperation(definitions[2], "crossProduct", "Vector", argsCount = 2) {
                     assertField(args[0], "x", "Vector")
                     assertField(args[1], "y", "Vector")
                 }

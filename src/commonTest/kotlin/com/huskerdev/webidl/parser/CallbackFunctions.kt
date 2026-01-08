@@ -15,7 +15,7 @@ class CallbackFunctions {
             assertEquals(definitions.size, 1)
 
             assertCallbackFunction(definitions[0], "identifier") {
-                assertFunction(function, "", "int", argsCount = 0)
+                assertOperation(operation, "", "int", argsCount = 0)
             }
         }
     }
@@ -33,7 +33,7 @@ class CallbackFunctions {
             assertEquals(definitions.size, 2)
 
             assertCallbackFunction(definitions[0], "AsyncOperationCallback") {
-                assertFunction(function, "", "undefined", argsCount = 1) {
+                assertOperation(operation, "", "undefined", argsCount = 1) {
                     assertField(args[0], "status", "DOMString")
                 }
             }
@@ -46,7 +46,7 @@ class CallbackFunctions {
             ) {
                 assertAttributeIdent(attributes[0], "Exposed", "Window")
 
-                assertFunction(definitions[0], "performOperation", "undefined", argsCount = 1) {
+                assertOperation(definitions[0], "performOperation", "undefined", argsCount = 1) {
                     assertField(args[0], "whenFinished", "AsyncOperationCallback")
                 }
             }

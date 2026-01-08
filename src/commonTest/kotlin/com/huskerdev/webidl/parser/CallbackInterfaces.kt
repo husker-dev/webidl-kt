@@ -22,7 +22,7 @@ class CallbackInterfaces {
                 definitions = 1,
                 isCallback = true
             ) {
-                assertFunction(definitions[0], "a", "void", argsCount = 0)
+                assertOperation(definitions[0], "a", "void", argsCount = 0)
             }
         }
     }

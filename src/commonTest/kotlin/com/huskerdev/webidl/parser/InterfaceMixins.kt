@@ -68,7 +68,7 @@ class InterfaceMixins {
                 definitions = 1,
                 isMixin = true
             ) {
-                assertFunction(definitions[0], "addEventListener", "undefined", argsCount = 3) {
+                assertOperation(definitions[0], "addEventListener", "undefined", argsCount = 3) {
                     assertField(args[0], "type", "DOMString")
                     assertField(args[1], "listener", "EventListener")
                     assertField(args[2], "useCapture", "boolean")
