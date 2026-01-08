@@ -1,9 +1,10 @@
 <img width="100" src="./.github/icon.webp" alt="logo">
 
 #  webidl-kt
-### Kotlin Multipaltform library for parsing [WebIDL](https://webidl.spec.whatwg.org/).
 
-Small and optimized library with streaming parsing capabilities, as well as type customization.
+Small and optimized Kotlin Multipaltform library for parsing [WebIDL](https://webidl.spec.whatwg.org/). 
+
+Supports streaming and type customization.
 
 ## Dependency
 
