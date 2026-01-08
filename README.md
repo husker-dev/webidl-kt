@@ -1,10 +1,13 @@
-<img width="100" src="./.github/icon.webp" alt="logo">
-
-#  webidl-kt
-
-Small and optimized Kotlin Multipaltform library for parsing [WebIDL](https://webidl.spec.whatwg.org/). 
-
-Supports streaming and type customization.
+<div>
+  <img width="100" src="./.github/icon.webp" alt="logo" align="left">
+  <div>
+        <h3>webidl-kt</h3>
+        Small Kotlin Multipaltform library for parsing <a href="https://webidl.spec.whatwg.org/">WebIDL</a>. 
+        <br>
+        Supports streaming and type customization.
+  </div>
+</div>
+<br>
 
 ## Dependency
 
