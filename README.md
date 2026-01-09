@@ -4,7 +4,7 @@
         <h3>webidl-kt</h3>
         Small Kotlin Multipaltform library for parsing <a href="https://webidl.spec.whatwg.org/">WebIDL</a>. 
         <br>
-        Supports streaming and type customization.
+        Supports streaming and custom types.
   </div>
 </div>
 <br>
