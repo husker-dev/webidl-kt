@@ -1,5 +1,6 @@
 package com.huskerdev.webidl.parser
 
+import com.huskerdev.webidl.WebIDLPrinter
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 import kotlin.test.assertContentEquals
@@ -9,7 +10,7 @@ import kotlin.test.assertNotNull
 
 @OptIn(ExperimentalContracts::class)
 fun assertField(
-    def: WebIDLDefinition,
+    def: IdlDefinition,
     name: String,
     type: String,
     value: String? = null,
@@ -22,17 +23,17 @@ fun assertField(
     isConst: Boolean = false,
     isVariadic: Boolean = false,
     isRequired: Boolean = false,
-    block: WebIDLFieldDef.() -> Unit = {}
+    block: IdlField.() -> Unit = {}
 ) {
-    contract { returns() implies (def is WebIDLFieldDef) }
+    contract { returns() implies (def is IdlField) }
 
-    assertIs<WebIDLFieldDef>(def)
+    assertIs<IdlField>(def)
 
     assertEquals(name, def.name)
-    assertEquals(type, def.type.toString())
+    assertEquals(type, WebIDLPrinter.printType(def.type))
     if(value != null) {
         assertNotNull(def.value)
-        assertEquals(value, def.value.toString())
+        assertEquals(value, WebIDLPrinter.printFieldValue(def.value))
     }
     assertEquals(attributes, def.attributes.size, "attributes mismatch")
 
@@ -50,20 +51,20 @@ fun assertField(
 
 @OptIn(ExperimentalContracts::class)
 fun assertOperation(
-    def: WebIDLDefinition,
+    def: IdlDefinition,
     name: String,
     type: String,
     argsCount: Int,
     isStatic: Boolean = false,
     attributes: Int = 0,
-    block: WebIDLOperationDef.() -> Unit = {}
+    block: IdlOperation.() -> Unit = {}
 ){
-    contract { returns() implies (def is WebIDLOperationDef) }
+    contract { returns() implies (def is IdlOperation) }
 
-    assertIs<WebIDLOperationDef>(def)
+    assertIs<IdlOperation>(def)
 
     assertEquals(name, def.name)
-    assertEquals(type, def.type.toString())
+    assertEquals(type, WebIDLPrinter.printType(def.type))
     assertEquals(argsCount, def.args.size)
     assertEquals(isStatic, def.isStatic, "expected 'static'")
 
@@ -74,14 +75,14 @@ fun assertOperation(
 
 @OptIn(ExperimentalContracts::class)
 fun assertConstructor(
-    def: WebIDLDefinition,
+    def: IdlDefinition,
     argsCount: Int,
     attributes: Int = 0,
-    block: WebIDLConstructorDef.() -> Unit = {}
+    block: IdlConstructor.() -> Unit = {}
 ){
-    contract { returns() implies (def is WebIDLConstructorDef) }
+    contract { returns() implies (def is IdlConstructor) }
 
-    assertIs<WebIDLConstructorDef>(def)
+    assertIs<IdlConstructor>(def)
 
     assertEquals(argsCount, def.args.size)
     assertEquals(attributes, def.attributes.size, "attributes mismatch")
@@ -91,7 +92,7 @@ fun assertConstructor(
 
 @OptIn(ExperimentalContracts::class)
 fun assertInterface(
-    def: WebIDLDefinition,
+    def: IdlDefinition,
     name: String,
     implements: String?,
     definitions: Int,
@@ -99,11 +100,11 @@ fun assertInterface(
     isPartial: Boolean = false,
     isMixin: Boolean = false,
     isCallback: Boolean = false,
-    block: WebIDLInterfaceDef.() -> Unit = {}
+    block: IdlInterface.() -> Unit = {}
 ){
-    contract { returns() implies (def is WebIDLInterfaceDef) }
+    contract { returns() implies (def is IdlInterface) }
 
-    assertIs<WebIDLInterfaceDef>(def)
+    assertIs<IdlInterface>(def)
 
     assertEquals(name, def.name, "name mismatch")
     assertEquals(implements, def.implements, "implementation mismatch")
@@ -118,17 +119,17 @@ fun assertInterface(
 
 @OptIn(ExperimentalContracts::class)
 fun assertDictionary(
-    def: WebIDLDefinition,
+    def: IdlDefinition,
     name: String,
     implements: String?,
     definitions: Int,
     attributes: Int = 0,
     isPartial: Boolean = false,
-    block: WebIDLDictionaryDef.() -> Unit = {}
+    block: IdlDictionary.() -> Unit = {}
 ){
-    contract { returns() implies (def is WebIDLDictionaryDef) }
+    contract { returns() implies (def is IdlDictionary) }
 
-    assertIs<WebIDLDictionaryDef>(def)
+    assertIs<IdlDictionary>(def)
 
     assertEquals(name, def.name, "name mismatch")
     assertEquals(implements, def.implements, "implementation mismatch")
@@ -141,16 +142,16 @@ fun assertDictionary(
 
 @OptIn(ExperimentalContracts::class)
 fun assertNamespace(
-    def: WebIDLDefinition,
+    def: IdlDefinition,
     name: String,
     definitions: Int,
     attributes: Int = 0,
     isPartial: Boolean = false,
-    block: WebIDLNamespaceDef.() -> Unit = {}
+    block: IdlNamespace.() -> Unit = {}
 ){
-    contract { returns() implies (def is WebIDLNamespaceDef) }
+    contract { returns() implies (def is IdlNamespace) }
 
-    assertIs<WebIDLNamespaceDef>(def)
+    assertIs<IdlNamespace>(def)
 
     assertEquals(name, def.name, "name mismatch")
     assertEquals(definitions, def.definitions.size, "definitions mismatch")
@@ -162,13 +163,13 @@ fun assertNamespace(
 
 @OptIn(ExperimentalContracts::class)
 fun assertEnum(
-    def: WebIDLDefinition,
+    def: IdlDefinition,
     name: String,
     elements: List<String>
 ){
-    contract { returns() implies (def is WebIDLEnumDef) }
+    contract { returns() implies (def is IdlEnum) }
 
-    assertIs<WebIDLEnumDef>(def)
+    assertIs<IdlEnum>(def)
 
     assertEquals(name, def.name, "name mismatch")
     assertContentEquals(elements, def.definitions.map { it.name })
@@ -176,13 +177,13 @@ fun assertEnum(
 
 @OptIn(ExperimentalContracts::class)
 fun assertCallbackFunction(
-    def: WebIDLDefinition,
+    def: IdlDefinition,
     name: String,
-    block: WebIDLCallbackFunctionDef.() -> Unit = {}
+    block: IdlCallbackFunction.() -> Unit = {}
 ){
-    contract { returns() implies (def is WebIDLCallbackFunctionDef) }
+    contract { returns() implies (def is IdlCallbackFunction) }
 
-    assertIs<WebIDLCallbackFunctionDef>(def)
+    assertIs<IdlCallbackFunction>(def)
     assertEquals(name, def.name, "name mismatch")
 
     block(def)
@@ -190,124 +191,124 @@ fun assertCallbackFunction(
 
 @OptIn(ExperimentalContracts::class)
 fun assertAttribute(
-    attr: WebIDLExtendedAttributeDef,
+    attr: IdlExtendedAttribute,
     name: String
 ){
-    assertIs<WebIDLExtendedAttributeDefNoArgs>(attr)
+    assertIs<IdlExtendedAttribute.NoArgs>(attr)
     assertEquals(name, attr.name)
 }
 
 @OptIn(ExperimentalContracts::class)
 fun assertAttributeIdent(
-    attr: WebIDLExtendedAttributeDef,
+    attr: IdlExtendedAttribute,
     name: String,
     identifier: String
 ){
-    assertIs<WebIDLExtendedAttributeDefIdent>(attr)
+    assertIs<IdlExtendedAttribute.IdentifierValue>(attr)
     assertEquals(name, attr.name)
     assertEquals(identifier, attr.identifier)
 }
 
 @OptIn(ExperimentalContracts::class)
 fun assertIncludes(
-    attr: WebIDLDefinition,
+    attr: IdlDefinition,
     target: String,
     source: String
 ){
-    assertIs<WebIDLIncludesDef>(attr)
+    assertIs<IdlIncludes>(attr)
     assertEquals(target, attr.target)
     assertEquals(source, attr.source)
 }
 
 @OptIn(ExperimentalContracts::class)
 fun assertIterable(
-    attr: WebIDLDefinition,
+    attr: IdlDefinition,
     keyType: String,
     valueType: String? = null
 ){
-    assertIs<WebIDLIterableDef>(attr)
-    assertEquals(keyType, attr.keyType.toString())
+    assertIs<IdlIterable>(attr)
+    assertEquals(keyType, WebIDLPrinter.printType(attr.keyType))
     if(valueType != null) {
         assertNotNull(attr.valueType)
-        assertEquals(valueType, attr.valueType.toString())
+        assertEquals(valueType, WebIDLPrinter.printType(attr.valueType))
     }
 }
 
 @OptIn(ExperimentalContracts::class)
 fun assertAsyncIterable(
-    attr: WebIDLDefinition,
+    attr: IdlDefinition,
     keyType: String,
     valueType: String? = null
 ){
-    assertIs<WebIDLAsyncIterableLikeDef>(attr)
-    assertEquals(keyType, attr.keyType.toString())
+    assertIs<IdlAsyncIterableLike>(attr)
+    assertEquals(keyType, WebIDLPrinter.printType(attr.keyType))
     if(valueType != null) {
         assertNotNull(attr.valueType)
-        assertEquals(valueType, attr.valueType.toString())
+        assertEquals(valueType, WebIDLPrinter.printType(attr.valueType))
     }
 }
 
 @OptIn(ExperimentalContracts::class)
 fun assertMapLike(
-    attr: WebIDLDefinition,
+    attr: IdlDefinition,
     keyType: String,
     valueType: String? = null,
     isReadOnly: Boolean
 ){
-    assertIs<WebIDLMapLikeDef>(attr)
-    assertEquals(keyType, attr.keyType.toString())
+    assertIs<IdlMapLike>(attr)
+    assertEquals(keyType, WebIDLPrinter.printType(attr.keyType))
     assertEquals(isReadOnly, attr.isReadOnly)
     if(valueType != null) {
         assertNotNull(attr.valueType)
-        assertEquals(valueType, attr.valueType.toString())
+        assertEquals(valueType, WebIDLPrinter.printType(attr.valueType))
     }
 }
 
 @OptIn(ExperimentalContracts::class)
 fun assertSetLike(
-    attr: WebIDLDefinition,
+    attr: IdlDefinition,
     type: String,
     isReadOnly: Boolean
 ){
-    assertIs<WebIDLSetLikeDef>(attr)
-    assertEquals(type, attr.type.toString())
+    assertIs<IdlSetLike>(attr)
+    assertEquals(type, WebIDLPrinter.printType(attr.type))
     assertEquals(isReadOnly, attr.isReadOnly)
 }
 
 @OptIn(ExperimentalContracts::class)
 fun assertTypedef(
-    attr: WebIDLDefinition,
+    attr: IdlDefinition,
     type: String,
     identifier: String
 ){
-    assertIs<WebIDLTypeDefDef>(attr)
-    assertEquals(type, attr.type.toString())
+    assertIs<IdlTypeDef>(attr)
+    assertEquals(type, WebIDLPrinter.printType(attr.type))
     assertEquals(identifier, attr.name)
 }
 
 @OptIn(ExperimentalContracts::class)
 fun assertStringifier(
-    def: WebIDLDefinition,
-    block: WebIDLStringifierDef.() -> Unit = {}
+    def: IdlDefinition,
+    block: IdlStringifier.() -> Unit = {}
 ){
-    assertIs<WebIDLStringifierDef>(def)
+    assertIs<IdlStringifier>(def)
     block(def)
 }
 
 @OptIn(ExperimentalContracts::class)
 fun assertGetter(
-    def: WebIDLDefinition,
-    block: WebIDLGetterDef.() -> Unit = {}
+    def: IdlDefinition,
+    block: IdlGetter.() -> Unit = {}
 ){
-    assertIs<WebIDLGetterDef>(def)
+    assertIs<IdlGetter>(def)
     block(def)
 }
 
 @OptIn(ExperimentalContracts::class)
 fun assertSetter(
-    def: WebIDLDefinition,
-    block: WebIDLSetterDef.() -> Unit = {}
+    def: IdlDefinition,
+    block: IdlSetter.() -> Unit = {}
 ){
-    assertIs<WebIDLSetterDef>(def)
+    assertIs<IdlSetter>(def)
     block(def)
 }

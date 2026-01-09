@@ -1,4 +1,4 @@
-package com.huskerdev.webidl.ast
+package com.huskerdev.webidl.resolved
 
 sealed interface WebIDLType {
     val nullable: Boolean

@@ -1,8 +1,8 @@
 package com.huskerdev.webidl
 
-import com.huskerdev.webidl.ast.WebIDLAST
-import com.huskerdev.webidl.parser.WebIDLParser
-import com.huskerdev.webidl.parser.WebIDLParserConsumer
+import com.huskerdev.webidl.resolved.WebIDLAST
+import com.huskerdev.webidl.parser.IdlParser
+import com.huskerdev.webidl.parser.IdlParserConsumer
 import kotlin.jvm.JvmStatic
 
 @Suppress("unused")
@@ -12,23 +12,23 @@ class WebIDL {
         @JvmStatic
         fun streamDefinitions(
             iterator: Iterator<Char>,
-            consumer: WebIDLParserConsumer,
+            consumer: IdlParserConsumer,
             types: Set<String> = WebIDLEnv.Default.builtinTypes.keys,
-        ) = WebIDLParser(iterator, consumer, types).parse()
+        ) = IdlParser(iterator, consumer, types).parse()
 
         @JvmStatic
         fun streamDefinitions(
             text: String,
-            consumer: WebIDLParserConsumer,
+            consumer: IdlParserConsumer,
             types: Set<String> = WebIDLEnv.Default.builtinTypes.keys,
-        ) = WebIDLParser(text.asSequence().iterator(), consumer, types).parse()
+        ) = IdlParser(text.asSequence().iterator(), consumer, types).parse()
 
         @JvmStatic
         fun parseDefinitions(
             iterator: Iterator<Char>,
             types: Set<String> = WebIDLEnv.Default.builtinTypes.keys
-        ) = WebIDLParserConsumer.Collector().run {
-            WebIDLParser(iterator, this, types).parse()
+        ) = IdlParserConsumer.Collector().run {
+            IdlParser(iterator, this, types).parse()
             root
         }
 
@@ -36,8 +36,8 @@ class WebIDL {
         fun parseDefinitions(
             text: String,
             types: Set<String> = WebIDLEnv.Default.builtinTypes.keys
-        ) = WebIDLParserConsumer.Collector().run {
-            WebIDLParser(text.asSequence().iterator(), this, types).parse()
+        ) = IdlParserConsumer.Collector().run {
+            IdlParser(text.asSequence().iterator(), this, types).parse()
             root
         }
 

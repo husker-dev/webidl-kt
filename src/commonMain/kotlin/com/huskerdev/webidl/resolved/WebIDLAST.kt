@@ -1,25 +1,25 @@
-package com.huskerdev.webidl.ast
+package com.huskerdev.webidl.resolved
 
 import com.huskerdev.webidl.WebIDLEnv
-import com.huskerdev.webidl.parser.WebIDLAsyncIterableLikeDef
-import com.huskerdev.webidl.parser.WebIDLCallbackFunctionDef
-import com.huskerdev.webidl.parser.WebIDLConstructorDef
-import com.huskerdev.webidl.parser.WebIDLDefinitionRoot
-import com.huskerdev.webidl.parser.WebIDLDictionaryDef
-import com.huskerdev.webidl.parser.WebIDLEnumDef
-import com.huskerdev.webidl.parser.WebIDLFieldDef
-import com.huskerdev.webidl.parser.WebIDLOperationDef
-import com.huskerdev.webidl.parser.WebIDLImplementsDef
-import com.huskerdev.webidl.parser.WebIDLIncludesDef
-import com.huskerdev.webidl.parser.WebIDLInterfaceDef
-import com.huskerdev.webidl.parser.WebIDLIterableDef
-import com.huskerdev.webidl.parser.WebIDLMapLikeDef
-import com.huskerdev.webidl.parser.WebIDLNamespaceDef
-import com.huskerdev.webidl.parser.WebIDLSetLikeDef
-import com.huskerdev.webidl.parser.WebIDLTypeDefDef
+import com.huskerdev.webidl.parser.IdlAsyncIterableLike
+import com.huskerdev.webidl.parser.IdlCallbackFunction
+import com.huskerdev.webidl.parser.IdlConstructor
+import com.huskerdev.webidl.parser.IdlDefinitionRoot
+import com.huskerdev.webidl.parser.IdlDictionary
+import com.huskerdev.webidl.parser.IdlEnum
+import com.huskerdev.webidl.parser.IdlField
+import com.huskerdev.webidl.parser.IdlOperation
+import com.huskerdev.webidl.parser.IdlImplements
+import com.huskerdev.webidl.parser.IdlIncludes
+import com.huskerdev.webidl.parser.IdlInterface
+import com.huskerdev.webidl.parser.IdlIterable
+import com.huskerdev.webidl.parser.IdlMapLike
+import com.huskerdev.webidl.parser.IdlNamespace
+import com.huskerdev.webidl.parser.IdlSetLike
+import com.huskerdev.webidl.parser.IdlTypeDef
 
 class WebIDLAST(
-    val root: WebIDLDefinitionRoot,
+    val root: IdlDefinitionRoot,
     env: WebIDLEnv = WebIDLEnv.Default
 ) {
     val builtinTypes: Map<String, WebIDLBuiltin> = env.builtinTypes.mapValues {
@@ -63,24 +63,24 @@ class WebIDLAST(
             ?: throw UnsupportedOperationException("Type '$name' is not declared")
     }
 
-    fun findType(type: com.huskerdev.webidl.parser.WebIDLType): WebIDLType {
+    fun findType(type: com.huskerdev.webidl.parser.IdlType): WebIDLType {
         throw UnsupportedOperationException()
     }
 
     private fun declareTypes() {
         root.definitions.forEach { def ->
             when (def) {
-                is WebIDLInterfaceDef if(!def.isPartial) ->
+                is IdlInterface if(!def.isPartial) ->
                     (if(def.isMixin) mixins else interfaces)[def.name] = WebIDLInterface(def.name, def.isCallback)
-                is WebIDLDictionaryDef ->
+                is IdlDictionary ->
                     dictionaries[def.name] = WebIDLDictionary(def.name)
-                is WebIDLEnumDef ->
+                is IdlEnum ->
                     enums[def.name] = WebIDLEnum(def.name)
-                is WebIDLNamespaceDef ->
+                is IdlNamespace ->
                     namespaces[def.name] = WebIDLNamespace(def.name)
-                is WebIDLTypeDefDef ->
+                is IdlTypeDef ->
                     typeDefs[def.name] = WebIDLTypeDef(def.name, def.type)
-                is WebIDLCallbackFunctionDef ->
+                is IdlCallbackFunction ->
                     callbacks[def.name] = WebIDLCallback(def.name)
                 else -> return@forEach
             }
@@ -96,7 +96,7 @@ class WebIDLAST(
     private fun resolveDeclarationMembers(){
         root.definitions.forEach { decl ->
             when (decl) {
-                is WebIDLInterfaceDef -> {
+                is IdlInterface -> {
                     val inter = if(decl.isMixin)
                         mixins[decl.name]!! else interfaces[decl.name]!!
 
@@ -110,22 +110,22 @@ class WebIDLAST(
 
                     decl.definitions.forEach { decl ->
                         when(decl) {
-                            is WebIDLAsyncIterableLikeDef ->
+                            is IdlAsyncIterableLike ->
                                 inter.asyncIterableType = findType(decl.keyType) to decl.valueType?.run { findType(this) }
-                            is WebIDLIterableDef ->
+                            is IdlIterable ->
                                 inter.iterableType = findType(decl.keyType) to decl.valueType?.run { findType(this) }
-                            is WebIDLMapLikeDef ->
+                            is IdlMapLike ->
                                 inter.mapType = findType(decl.keyType) to findType(decl.valueType)
-                            is WebIDLSetLikeDef ->
+                            is IdlSetLike ->
                                 inter.setType = findType(decl.type)
 
-                            is WebIDLFieldDef ->
+                            is IdlField ->
                                 (if(decl.isStatic) inter.staticFields else inter.fields) += decl.toDeclarationField()
 
-                            is WebIDLOperationDef ->
+                            is IdlOperation ->
                                 (if(decl.isStatic) inter.staticFunctions else inter.functions) += decl.toFunction()
 
-                            is WebIDLConstructorDef -> {
+                            is IdlConstructor -> {
                                 inter.constructors += WebIDLConstructor(
                                     decl.args.map { it.toArgField() }
                                 )
@@ -134,30 +134,30 @@ class WebIDLAST(
                         }
                     }
                 }
-                is WebIDLDictionaryDef -> {
+                is IdlDictionary -> {
                     val dict = dictionaries[decl.name]!!
 
                     decl.definitions.forEach { decl ->
                         when(decl) {
-                            is WebIDLFieldDef ->
+                            is IdlField ->
                                 dict.fields += decl.toDeclarationField()
                             else -> throw UnsupportedOperationException("Unexpected definition")
                         }
                     }
                 }
-                is WebIDLCallbackFunctionDef -> {
+                is IdlCallbackFunction -> {
                     val callback = callbacks[decl.name]!!
                     callback.type = findType(decl.operation.type)
                     callback.args = decl.operation.args.map { it.toArgField() }
                 }
-                is WebIDLNamespaceDef -> {
+                is IdlNamespace -> {
                     val namespace = namespaces[decl.name]!!
 
                     decl.definitions.forEach { decl ->
                         when(decl) {
-                            is WebIDLFieldDef ->
+                            is IdlField ->
                                 namespace.fields += decl.toDeclarationField()
-                            is WebIDLOperationDef ->
+                            is IdlOperation ->
                                 namespace.functions += decl.toFunction()
                             else -> throw UnsupportedOperationException("Unexpected definition")
                         }
@@ -171,14 +171,14 @@ class WebIDLAST(
     private fun execExpands(){
         root.definitions.forEach { decl ->
             when (decl) {
-                is WebIDLImplementsDef -> {
+                is IdlImplements -> {
                     val target = interfaces[decl.target]
                         ?: throw UnsupportedOperationException("Expected interface")
                     val source = interfaces[decl.source]
                         ?: throw UnsupportedOperationException("Expected interface")
                     target.implements = source
                 }
-                is WebIDLIncludesDef -> {
+                is IdlIncludes -> {
                     val target = interfaces[decl.target]
                         ?: throw UnsupportedOperationException("Expected interface")
                     val source = mixins[decl.source]
@@ -190,14 +190,14 @@ class WebIDLAST(
         }
     }
 
-    private fun WebIDLFieldDef.toDeclarationField() = WebIDLDeclarationField(
+    private fun IdlField.toDeclarationField() = WebIDLDeclarationField(
         name,
         findType(type),
         value,
         isConst, isReadOnly,isStatic, isInherit
     )
 
-    private fun WebIDLFieldDef.toArgField() = WebIDLArgField(
+    private fun IdlField.toArgField() = WebIDLArgField(
         name,
         findType(type),
         value,
@@ -205,7 +205,7 @@ class WebIDLAST(
     )
 
 
-    private fun WebIDLOperationDef.toFunction() = WebIDLFunction(
+    private fun IdlOperation.toFunction() = WebIDLFunction(
         name,
         findType(type),
         args.map { it.toArgField() },

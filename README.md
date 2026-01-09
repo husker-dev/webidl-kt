@@ -43,8 +43,8 @@ WebIDL.streamDefinitions("""
     interface TestInterface {
         attribute long a;
     };
-""".trimIndent(), object: WebIDLParserConsumer {
-    override fun enter(definition: WebIDLDefinition) {
+""".trimIndent(), object: IdlParserConsumer {
+    override fun enter(definition: IdlDefinition) {
         // Definition opened
     }
     override fun exit() {
@@ -68,8 +68,8 @@ val iterator = File("someFile.idl").bufferedReader().iterator()
 val root = WebIDL.parseDefinitions(iterator)
 
 // or stream
-WebIDL.streamDefinitions(iterator, object: WebIDLParserConsumer {
-    override fun enter(definition: WebIDLDefinition) {
+WebIDL.streamDefinitions(iterator, object: IdlParserConsumer {
+    override fun enter(definition: IdlDefinition) {
         // Definition opened
     }
     override fun exit() {

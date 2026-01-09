@@ -1,7 +1,8 @@
 package com.huskerdev.webidl
 
-import com.huskerdev.webidl.ast.WebIDLBuiltinKind
+import com.huskerdev.webidl.resolved.WebIDLBuiltinKind
 
+@Suppress("unused")
 interface WebIDLEnv {
 
     val builtinTypes: Map<String, WebIDLBuiltinKind>

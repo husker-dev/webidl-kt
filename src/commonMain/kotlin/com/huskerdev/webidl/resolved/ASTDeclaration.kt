@@ -1,6 +1,4 @@
-package com.huskerdev.webidl.ast
-
-import com.huskerdev.webidl.lexer.WebIDLLexer
+package com.huskerdev.webidl.resolved
 
 sealed interface WebIDLDeclaration {
     val nullable: Boolean
@@ -94,7 +92,7 @@ class WebIDLEnum(
 
 class WebIDLTypeDef(
     val name: String,
-    val source: com.huskerdev.webidl.parser.WebIDLType
+    val source: com.huskerdev.webidl.parser.IdlType
 ): WebIDLDeclaration {
     lateinit var linked: WebIDLType
         private set
