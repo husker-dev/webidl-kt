@@ -1,5 +1,5 @@
 <div>
-  <img width="100" src="./.github/icon.webp" alt="logo" align="left">
+  <img width="120" src="./.github/icon.webp" alt="logo" align="left">
   <div>
         <h3>webidl-kt</h3>
         Small Kotlin Multipaltform library for parsing <a href="https://webidl.spec.whatwg.org/">WebIDL</a>. 
