@@ -175,8 +175,8 @@ class InterfaceMembers {
     fun optional(){
         WebIDL.parseDefinitions("""
             interface interface_identifier {
-                void identifier1(int arg1, optional DOMString arg2);
-                void identifier2(int arg1, optional DOMString arg2 = "value");
+                void identifier1(long arg1, optional DOMString arg2);
+                void identifier2(long arg1, optional DOMString arg2 = "value");
             };
         """.trimIndent()).apply {
             assertEquals(definitions.size, 1)
@@ -187,11 +187,11 @@ class InterfaceMembers {
                 definitions = 2
             ) {
                 assertOperation(definitions[0], "identifier1", "void", argsCount = 2) {
-                    assertField(args[0], "arg1", "int")
+                    assertField(args[0], "arg1", "long")
                     assertField(args[1], "arg2", "DOMString", isOptional = true)
                 }
                 assertOperation(definitions[1], "identifier2", "void", argsCount = 2) {
-                    assertField(args[0], "arg1", "int")
+                    assertField(args[0], "arg1", "long")
                     assertField(args[1], "arg2", "DOMString", isOptional = true, value = "\"value\"")
                 }
             }
@@ -433,8 +433,8 @@ class InterfaceMembers {
     fun iterable(){
         WebIDL.parseDefinitions("""
             interface interface_identifier {
-                iterable<int>;
-                iterable<DOMString, int>;
+                iterable<long>;
+                iterable<DOMString, long>;
             };
         """.trimIndent()).apply {
             assertEquals(definitions.size, 1)
@@ -444,8 +444,8 @@ class InterfaceMembers {
                 implements = null,
                 definitions = 2
             ) {
-                assertIterable(definitions[0], "int")
-                assertIterable(definitions[1], "DOMString", "int")
+                assertIterable(definitions[0], "long")
+                assertIterable(definitions[1], "DOMString", "long")
             }
         }
     }
@@ -454,8 +454,8 @@ class InterfaceMembers {
     fun iterableAsync(){
         WebIDL.parseDefinitions("""
             interface interface_identifier {
-                async_iterable<int>;
-                async_iterable<DOMString, int>;
+                async_iterable<long>;
+                async_iterable<DOMString, long>;
             };
         """.trimIndent()).apply {
             assertEquals(definitions.size, 1)
@@ -465,8 +465,8 @@ class InterfaceMembers {
                 implements = null,
                 definitions = 2
             ) {
-                assertAsyncIterable(definitions[0], "int")
-                assertAsyncIterable(definitions[1], "DOMString", "int")
+                assertAsyncIterable(definitions[0], "long")
+                assertAsyncIterable(definitions[1], "DOMString", "long")
             }
         }
     }
@@ -475,8 +475,8 @@ class InterfaceMembers {
     fun maplike(){
         WebIDL.parseDefinitions("""
             interface interface_identifier {
-                readonly maplike<DOMString, int>;
-                maplike<DOMString, int>;
+                readonly maplike<DOMString, long>;
+                maplike<DOMString, long>;
             };
         """.trimIndent()).apply {
             assertEquals(definitions.size, 1)
@@ -486,8 +486,8 @@ class InterfaceMembers {
                 implements = null,
                 definitions = 2
             ) {
-                assertMapLike(definitions[0], "DOMString", "int", true)
-                assertMapLike(definitions[1], "DOMString", "int", false)
+                assertMapLike(definitions[0], "DOMString", "long", true)
+                assertMapLike(definitions[1], "DOMString", "long", false)
             }
         }
     }
@@ -496,8 +496,8 @@ class InterfaceMembers {
     fun setlike(){
         WebIDL.parseDefinitions("""
             interface interface_identifier {
-                readonly setlike<int>;
-                setlike<int>;
+                readonly setlike<long>;
+                setlike<long>;
             };
         """.trimIndent()).apply {
             assertEquals(definitions.size, 1)
@@ -507,8 +507,8 @@ class InterfaceMembers {
                 implements = null,
                 definitions = 2
             ) {
-                assertSetLike(definitions[0], "int", true)
-                assertSetLike(definitions[1], "int", false)
+                assertSetLike(definitions[0], "long", true)
+                assertSetLike(definitions[1], "long", false)
             }
         }
     }

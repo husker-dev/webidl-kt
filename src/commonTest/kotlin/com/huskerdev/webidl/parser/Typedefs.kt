@@ -10,12 +10,12 @@ class Typedefs {
     @Test
     fun test1(){
         WebIDL.parseDefinitions("""
-            typedef int identifier;
+            typedef long identifier;
         """.trimIndent()).apply {
             assertEquals(definitions.size, 1)
 
             assertTypedef(definitions[0],
-                type = "int",
+                type = "long",
                 identifier = "identifier"
             )
         }

@@ -9,9 +9,6 @@ sealed interface IdlDefinitionContainer<T: IdlDefinition>: IdlDefinition {
 
 sealed interface IdlDefaultDefinitionContainer: IdlDefinitionContainer<IdlDefinition>
 
-sealed interface IdlAttributedHolder: IdlDefinition {
-    val attributes: List<IdlExtendedAttribute>
-}
 
 // Implementations
 

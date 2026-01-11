@@ -1,6 +1,7 @@
 package com.huskerdev.webidl
 
 import com.huskerdev.webidl.parser.*
+import com.huskerdev.webidl.resolver.ResolvedIdlType
 
 object WebIDLPrinter {
 
@@ -148,7 +149,7 @@ object WebIDLPrinter {
                     builder.append(' ').append(name)
                     if (value != null) {
                         builder.append(" = ")
-                        printFieldValue(builder, value)
+                        printValue(builder, value)
                     }
                 }
 
@@ -257,12 +258,14 @@ object WebIDLPrinter {
 
                 is IdlExtendedAttribute.Wildcard ->
                     builder.append(name).append("=*")
+
+                else -> throw UnsupportedOperationException()
             }
         }
         return builder
     }
 
-    private fun printFieldValue(builder: IntentStringBuilder, value: IdlValue) {
+    private fun printValue(builder: IntentStringBuilder, value: IdlValue) {
         builder.append(when(value) {
             IdlValue.DictionaryInitValue -> "{}"
             IdlValue.NullValue -> "null"
@@ -273,16 +276,16 @@ object WebIDLPrinter {
         })
     }
 
-    private fun printType(builder: IntentStringBuilder, type: IdlType) {
+    private fun printType(builder: Appendable, type: IdlType) {
         val nullableChar = if(type.nullable) "?" else ""
         when(type) {
             is IdlType.Default -> {
                 builder.append(type.name)
-                if(type.types.isNotEmpty()) {
+                if(type.parameters.isNotEmpty()) {
                     builder.append("<")
-                    type.types.forEachIndexed { index, it ->
+                    type.parameters.forEachIndexed { index, it ->
                         printType(builder, it)
-                        if(index != type.types.lastIndex)
+                        if(index != type.parameters.lastIndex)
                             builder.append(", ")
                     }
                     builder.append(">")
@@ -292,6 +295,34 @@ object WebIDLPrinter {
                 builder.append('(')
                 type.types.forEachIndexed { index, it ->
                     printType(builder, it)
+                    if(index != type.types.lastIndex)
+                        builder.append(" or ")
+                }
+                builder.append(')')
+            }
+        }
+        builder.append(nullableChar)
+    }
+
+    private fun printResolvedType(builder: Appendable, type: ResolvedIdlType) {
+        val nullableChar = if(type.isNullable) "?" else ""
+        when(type) {
+            is ResolvedIdlType.Default -> {
+                builder.append(type.declaration.name)
+                if(type.parameters.isNotEmpty()) {
+                    builder.append("<")
+                    type.parameters.forEachIndexed { index, it ->
+                        printResolvedType(builder, it)
+                        if(index != type.parameters.lastIndex)
+                            builder.append(", ")
+                    }
+                    builder.append(">")
+                }
+            }
+            is ResolvedIdlType.Union -> {
+                builder.append('(')
+                type.types.forEachIndexed { index, it ->
+                    printResolvedType(builder, it)
                     if(index != type.types.lastIndex)
                         builder.append(" or ")
                 }
@@ -326,13 +357,18 @@ object WebIDLPrinter {
         print(IntentStringBuilder(" ".repeat(spaces)), definition).toString()
 
     @Suppress("unused")
-    fun printFieldValue(value: IdlValue) = IntentStringBuilder().apply {
-        printFieldValue(this, value)
+    fun printValue(value: IdlValue) = IntentStringBuilder().apply {
+        printValue(this, value)
     }.toString()
 
     @Suppress("unused")
     fun printType(type: IdlType) = IntentStringBuilder().apply {
         printType(this, type)
+    }.toString()
+
+    @Suppress("unused")
+    fun printResolvedType(type: ResolvedIdlType) = IntentStringBuilder().apply {
+        printResolvedType(this, type)
     }.toString()
 
     @Suppress("unused")

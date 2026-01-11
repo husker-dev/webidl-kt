@@ -1,6 +1,6 @@
 package com.huskerdev.webidl
 
-import com.huskerdev.webidl.resolved.WebIDLAST
+import com.huskerdev.webidl.resolver.IdlResolver
 import com.huskerdev.webidl.parser.IdlParser
 import com.huskerdev.webidl.parser.IdlParserConsumer
 import kotlin.jvm.JvmStatic
@@ -42,16 +42,16 @@ class WebIDL {
         }
 
         @JvmStatic
-        fun parseAST(
+        fun resolve(
             iterable: Iterator<Char>,
             env: WebIDLEnv = WebIDLEnv.Default
-        ) = WebIDLAST(parseDefinitions(iterable, env.builtinTypes.keys), env)
+        ) = IdlResolver(parseDefinitions(iterable, env.builtinTypes.keys), env)
 
         @JvmStatic
-        fun parseAST(
+        fun resolve(
             text: String,
             env: WebIDLEnv = WebIDLEnv.Default
-        ) = WebIDLAST(parseDefinitions(text, env.builtinTypes.keys), env)
+        ) = IdlResolver(parseDefinitions(text, env.builtinTypes.keys), env)
 
     }
 }

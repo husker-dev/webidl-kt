@@ -10,12 +10,12 @@ class CallbackFunctions {
     @Test
     fun test1(){
         WebIDL.parseDefinitions("""
-            callback identifier = int (/* arguments... */);
+            callback identifier = long (/* arguments... */);
         """.trimIndent()).apply {
             assertEquals(definitions.size, 1)
 
             assertCallbackFunction(definitions[0], "identifier") {
-                assertOperation(operation, "", "int", argsCount = 0)
+                assertOperation(operation, "", "long", argsCount = 0)
             }
         }
     }

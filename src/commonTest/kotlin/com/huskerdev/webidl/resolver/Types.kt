@@ -1,6 +1,7 @@
-package com.huskerdev.webidl.parser
+package com.huskerdev.webidl.resolver
 
 import com.huskerdev.webidl.WebIDL
+import com.huskerdev.webidl.WebIDLPrinter
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -38,20 +39,17 @@ class Types {
             "symbol",
             "(long or DOMString)"
         )
-        WebIDL.parseDefinitions("""
+        WebIDL.resolve("""
             |interface A {
             |    ${types.joinToString("\n|    ") { "$it a();" }}
             |};
         """.trimMargin("|")).apply {
-            assertEquals(definitions.size, 1)
 
-            assertInterface(definitions[0],
-                name = "A",
-                implements = null,
-                definitions = 27
-            ) {
+            assertInterface(interfaces.values.first(), "A") {
                 types.forEachIndexed { index, string ->
-                    assertOperation(definitions[index], "a", string, 0)
+                    assertOperation(operations[index], "a") {
+                        assertEquals(string, WebIDLPrinter.printResolvedType(type))
+                    }
                 }
             }
         }

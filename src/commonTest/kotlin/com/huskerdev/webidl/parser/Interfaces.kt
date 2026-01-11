@@ -56,13 +56,13 @@ class Interfaces {
             interface identifier {
             
                 [extended_attributes]
-                const int constant_identifier = 42;
+                const long constant_identifier = 42;
             
                 [extended_attributes]
-                attribute int identifier;
+                attribute long identifier;
             
                 [extended_attributes]
-                int identifier(/* arguments... */);
+                long identifier(/* arguments... */);
             };
         """.trimIndent()).apply {
             assertEquals(definitions.size, 1)
@@ -75,13 +75,13 @@ class Interfaces {
             ) {
                 assertAttribute(attributes[0], "extended_attributes")
 
-                assertField(definitions[0], "constant_identifier", "int", value = "42", attributes = 1, isConst = true) {
+                assertField(definitions[0], "constant_identifier", "long", value = "42", attributes = 1, isConst = true) {
                     assertAttribute(attributes[0], "extended_attributes")
                 }
-                assertField(definitions[1], "identifier", "int", attributes = 1, isAttribute = true) {
+                assertField(definitions[1], "identifier", "long", attributes = 1, isAttribute = true) {
                     assertAttribute(attributes[0], "extended_attributes")
                 }
-                assertOperation(definitions[2], "identifier", "int", argsCount = 0, attributes = 1) {
+                assertOperation(definitions[2], "identifier", "long", argsCount = 0, attributes = 1) {
                     assertAttribute(attributes[0], "extended_attributes")
                 }
             }

@@ -33,7 +33,7 @@ fun assertField(
     assertEquals(type, WebIDLPrinter.printType(def.type))
     if(value != null) {
         assertNotNull(def.value)
-        assertEquals(value, WebIDLPrinter.printFieldValue(def.value))
+        assertEquals(value, WebIDLPrinter.printValue(def.value))
     }
     assertEquals(attributes, def.attributes.size, "attributes mismatch")
 

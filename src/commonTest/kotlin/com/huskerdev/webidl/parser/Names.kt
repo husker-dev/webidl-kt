@@ -73,35 +73,35 @@ class Names {
     fun test2(){
         WebIDL.parseDefinitions("""
             [extended_attributes]
-            interface identifier {
-                attribute int attribute_identifier;
+            interface interface_identifier {
+                attribute long attribute_identifier;
             };
             
-            typedef int typedef_identifier;
+            typedef long typedef_identifier;
             
-            dictionary identifier {
-                int dictionary_member_identifier;
+            dictionary dictionary_identifier {
+                long dictionary_member_identifier;
             };
         """.trimIndent()).apply {
             assertEquals(definitions.size, 3)
 
             assertInterface(definitions[0],
-                name = "identifier",
+                name = "interface_identifier",
                 implements = null,
                 definitions = 1,
                 attributes = 1
             ) {
                 assertAttribute(attributes[0], "extended_attributes")
 
-                assertField(definitions[0], "attribute_identifier", "int", isAttribute = true)
+                assertField(definitions[0], "attribute_identifier", "long", isAttribute = true)
             }
-            assertTypedef(definitions[1], "int", "typedef_identifier")
+            assertTypedef(definitions[1], "long", "typedef_identifier")
             assertDictionary(definitions[2],
-                name = "identifier",
+                name = "dictionary_identifier",
                 implements = null,
                 definitions = 1
             ) {
-                assertField(definitions[0], "dictionary_member_identifier", "int")
+                assertField(definitions[0], "dictionary_member_identifier", "long")
             }
         }
     }
@@ -110,7 +110,7 @@ class Names {
     fun test3() {
         WebIDL.parseDefinitions("""
             interface interface_identifier {
-                const int constant_identifier = 42;
+                const long constant_identifier = 42;
             };
         """.trimIndent()
         ).apply {
@@ -121,7 +121,7 @@ class Names {
                 implements = null,
                 definitions = 1
             ) {
-                assertField(definitions[0], "constant_identifier", "int", isConst = true)
+                assertField(definitions[0], "constant_identifier", "long", isConst = true)
             }
         }
     }
@@ -130,7 +130,7 @@ class Names {
     fun test4() {
         WebIDL.parseDefinitions("""
             interface interface_identifier {
-                int operation_identifier(/* arguments... */);
+                long operation_identifier(/* arguments... */);
             };
         """.trimIndent()
         ).apply {
@@ -141,7 +141,7 @@ class Names {
                 implements = null,
                 definitions = 1
             ) {
-                assertOperation(definitions[0], "operation_identifier", "int", argsCount = 0)
+                assertOperation(definitions[0], "operation_identifier", "long", argsCount = 0)
             }
         }
     }
@@ -150,7 +150,7 @@ class Names {
     fun test5() {
         WebIDL.parseDefinitions("""
             interface interface_identifier {
-                int operation_identifier(int argument_identifier /* , ... */);
+                long operation_identifier(long argument_identifier /* , ... */);
             };
         """.trimIndent()
         ).apply {
@@ -161,8 +161,8 @@ class Names {
                 implements = null,
                 definitions = 1
             ) {
-                assertOperation(definitions[0], "operation_identifier", "int", argsCount = 1) {
-                    assertField(args[0], "argument_identifier", "int")
+                assertOperation(definitions[0], "operation_identifier", "long", argsCount = 1) {
+                    assertField(args[0], "argument_identifier", "long")
                 }
             }
         }

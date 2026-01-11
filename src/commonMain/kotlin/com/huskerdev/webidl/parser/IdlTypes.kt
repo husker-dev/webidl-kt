@@ -6,7 +6,7 @@ sealed interface IdlType {
     data class Default(
         val name: String,
         override val nullable: Boolean = false,
-        val types: List<IdlType> = emptyList(),
+        val parameters: List<IdlType> = emptyList(),
     ): IdlType
 
     data class Union(

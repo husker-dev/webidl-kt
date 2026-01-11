@@ -55,3 +55,5 @@ internal fun expectType(
     if(lexeme.type != type)
         throw WebIDLWrongSymbolException(lexeme, typeString)
 }
+
+open class WebIDLResolverException(message: String): Exception(message)

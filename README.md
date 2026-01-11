@@ -77,3 +77,18 @@ WebIDL.streamDefinitions(iterator, object: IdlParserConsumer {
     }
 })
 ```
+
+## Resolver
+
+The library contains a module for resolving types.
+
+It will check type compatibility, create references, and merge all mixins and partials.
+
+```kotlin
+val resolver = WebIDL.resolve("""
+    [Exposed=Window]
+    interface TestInterface {
+        attribute long a;
+    };
+""".trimIndent())
+```

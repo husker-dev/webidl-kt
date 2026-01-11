@@ -1,6 +1,6 @@
 package com.huskerdev.webidl
 
-import com.huskerdev.webidl.resolved.WebIDLBuiltinKind
+import com.huskerdev.webidl.resolver.WebIDLBuiltinKind
 
 @Suppress("unused")
 interface WebIDLEnv {
