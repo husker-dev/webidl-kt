@@ -277,7 +277,7 @@ object WebIDLPrinter {
     }
 
     private fun printType(builder: Appendable, type: IdlType) {
-        val nullableChar = if(type.nullable) "?" else ""
+        val nullableChar = if(type.isNullable) "?" else ""
         when(type) {
             is IdlType.Default -> {
                 builder.append(type.name)
@@ -328,6 +328,8 @@ object WebIDLPrinter {
                 }
                 builder.append(')')
             }
+
+            is ResolvedIdlType.Void -> type.name
         }
         builder.append(nullableChar)
     }

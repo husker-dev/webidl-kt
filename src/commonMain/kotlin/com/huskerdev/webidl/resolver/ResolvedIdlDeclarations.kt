@@ -5,7 +5,7 @@ import com.huskerdev.webidl.parser.IdlExtendedAttribute
 
 sealed interface ResolvedIdlDeclaration: IdlAttributedHolder {
     val name: String
-    val nullable: Boolean
+    val isNullable: Boolean
 }
 
 class BuiltinIdlDeclaration(
@@ -14,7 +14,7 @@ class BuiltinIdlDeclaration(
 ): ResolvedIdlDeclaration {
     override val attributes: List<IdlExtendedAttribute> = emptyList()
 
-    override val nullable = kind.nullable
+    override val isNullable = kind.nullable
 }
 
 class ResolvedIdlInterface(
@@ -22,7 +22,7 @@ class ResolvedIdlInterface(
     val isCallback: Boolean,
     override val attributes: List<IdlExtendedAttribute>,
 ): ResolvedIdlDeclaration {
-    override val nullable = true
+    override val isNullable = true
 
     var implements: ResolvedIdlInterface? = null
 
@@ -81,7 +81,7 @@ class ResolvedIdlDictionary(
     override val name: String,
     override val attributes: List<IdlExtendedAttribute>,
 ): ResolvedIdlDeclaration {
-    override val nullable = true
+    override val isNullable = true
 
     var implements: ResolvedIdlDictionary? = null
 
@@ -93,7 +93,7 @@ class ResolvedIdlEnum(
     val elements: List<String>,
     override val attributes: List<IdlExtendedAttribute>,
 ): ResolvedIdlDeclaration {
-    override val nullable = false
+    override val isNullable = false
 }
 
 class ResolvedIdlTypeDef(
@@ -104,13 +104,13 @@ class ResolvedIdlTypeDef(
     lateinit var type: ResolvedIdlType
         private set
 
-    override var nullable = false
+    override var isNullable = false
         private set
 
     fun resolve(idl: IdlResolver) {
         type = idl.findType(parserType!!)
         parserType = null
-        nullable = type.isNullable
+        isNullable = type.isNullable
     }
 }
 
@@ -118,7 +118,7 @@ class ResolvedIdlCallbackFunction(
     override val name: String,
     override val attributes: List<IdlExtendedAttribute>,
 ): ResolvedIdlDeclaration {
-    override val nullable = false
+    override val isNullable = false
 
     lateinit var type: ResolvedIdlType
     lateinit var args: List<ResolvedIdlField.Argument>
@@ -128,7 +128,7 @@ class ResolvedIdlNamespace(
     override val name: String,
     override val attributes: List<IdlExtendedAttribute>,
 ): ResolvedIdlDeclaration {
-    override val nullable: Boolean = false
+    override val isNullable: Boolean = false
 
     val fields = arrayListOf<ResolvedIdlField.Declaration>()
 

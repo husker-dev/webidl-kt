@@ -32,25 +32,19 @@ class IdlResolver(
         BuiltinIdlDeclaration(it.key, it.value)
     }
 
-    val interfaces: Map<String, ResolvedIdlInterface>
-        field = linkedMapOf()
+    val interfaces: Map<String, ResolvedIdlInterface> = linkedMapOf()
 
     private val mixins = linkedMapOf<String, ResolvedIdlInterface>()
 
-    val dictionaries: Map<String, ResolvedIdlDictionary>
-        field = linkedMapOf()
+    val dictionaries: Map<String, ResolvedIdlDictionary> = linkedMapOf()
 
-    val enums: Map<String, ResolvedIdlEnum>
-        field = linkedMapOf()
+    val enums: Map<String, ResolvedIdlEnum> = linkedMapOf()
 
-    val typeDefs: Map<String, ResolvedIdlTypeDef>
-        field = linkedMapOf()
+    val typeDefs: Map<String, ResolvedIdlTypeDef> = linkedMapOf()
 
-    val namespaces: Map<String, ResolvedIdlNamespace>
-        field = linkedMapOf()
+    val namespaces: Map<String, ResolvedIdlNamespace> = linkedMapOf()
 
-    val callbacks: Map<String, ResolvedIdlCallbackFunction>
-        field = linkedMapOf()
+    val callbacks: Map<String, ResolvedIdlCallbackFunction> = linkedMapOf()
 
     init {
         declareTypes()
@@ -70,14 +64,20 @@ class IdlResolver(
     }
 
     fun findType(type: IdlType): ResolvedIdlType = when(type) {
-        is IdlType.Default -> ResolvedIdlType.Default(
-            declaration = findDeclaration(type.name),
-            parameters = type.parameters.map(::findType),
-            isNullable = type.nullable
-        )
+        is IdlType.Default -> {
+            val declaration = findDeclaration(type.name)
+
+            if(declaration is BuiltinIdlDeclaration && declaration.kind == WebIDLBuiltinKind.VOID)
+                ResolvedIdlType.Void(declaration.name)
+            else ResolvedIdlType.Default(
+                declaration = declaration,
+                parameters = type.parameters.map(::findType),
+                isNullable = type.isNullable
+            )
+        }
         is IdlType.Union -> ResolvedIdlType.Union(
             types = type.types.map(::findType),
-            isNullable = type.nullable
+            isNullable = type.isNullable
         )
     }
 
@@ -85,17 +85,17 @@ class IdlResolver(
         root.definitions.forEach { def ->
             when (def) {
                 is IdlInterface if(!def.isPartial) ->
-                    (if(def.isMixin) mixins else interfaces)[def.name] = ResolvedIdlInterface(def.name, def.isCallback, def.attributes)
+                    ((if(def.isMixin) mixins else interfaces) as MutableMap)[def.name]  = ResolvedIdlInterface(def.name, def.isCallback, def.attributes)
                 is IdlDictionary ->
-                    dictionaries[def.name] = ResolvedIdlDictionary(def.name, def.attributes)
+                    (dictionaries as MutableMap)[def.name] = ResolvedIdlDictionary(def.name, def.attributes)
                 is IdlEnum ->
-                    enums[def.name] = ResolvedIdlEnum(def.name, def.definitions.map { it.name }, def.attributes)
+                    (enums as MutableMap)[def.name] = ResolvedIdlEnum(def.name, def.definitions.map { it.name }, def.attributes)
                 is IdlNamespace ->
-                    namespaces[def.name] = ResolvedIdlNamespace(def.name, def.attributes)
+                    (namespaces as MutableMap)[def.name] = ResolvedIdlNamespace(def.name, def.attributes)
                 is IdlTypeDef ->
-                    typeDefs[def.name] = ResolvedIdlTypeDef(def.name, def.type, def.attributes)
+                    (typeDefs as MutableMap)[def.name] = ResolvedIdlTypeDef(def.name, def.type, def.attributes)
                 is IdlCallbackFunction ->
-                    callbacks[def.name] = ResolvedIdlCallbackFunction(def.name, def.attributes)
+                    (callbacks as MutableMap)[def.name] = ResolvedIdlCallbackFunction(def.name, def.attributes)
                 else -> return@forEach
             }
         }

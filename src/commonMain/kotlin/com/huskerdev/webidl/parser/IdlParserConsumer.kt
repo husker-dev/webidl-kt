@@ -35,7 +35,7 @@ interface IdlParserConsumer {
         }
 
         override fun exit() {
-            stack.removeLast()
+            stack.removeLastOrNull()
         }
     }
 }

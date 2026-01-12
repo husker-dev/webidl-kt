@@ -1,17 +1,17 @@
 package com.huskerdev.webidl.parser
 
 sealed interface IdlType {
-    val nullable: Boolean
+    val isNullable: Boolean
 
     data class Default(
         val name: String,
-        override val nullable: Boolean = false,
+        override val isNullable: Boolean = false,
         val parameters: List<IdlType> = emptyList(),
     ): IdlType
 
     data class Union(
         val types: List<IdlType>,
-        override val nullable: Boolean,
+        override val isNullable: Boolean,
     ): IdlType
 }
 

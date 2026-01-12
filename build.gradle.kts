@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.android)
@@ -5,12 +7,18 @@ plugins {
 }
 
 group = "com.huskerdev"
-version = "1.0.0"
+version = "1.0.1"
 
 kotlin {
-    compilerOptions.freeCompilerArgs = listOf("-Xexplicit-backing-fields")
 
-    jvm()
+    jvm {
+        compilations.configureEach {
+            compileTaskProvider.get().compilerOptions {
+                jvmTarget = JvmTarget.JVM_11
+            }
+        }
+    }
+
     js {
         browser()
         nodejs()

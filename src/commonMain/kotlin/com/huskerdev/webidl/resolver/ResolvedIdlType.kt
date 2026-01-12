@@ -56,9 +56,16 @@ sealed interface ResolvedIdlType {
                 }
             }
             if(value is IdlValue.NullValue && (declaration is ResolvedIdlInterface || declaration is ResolvedIdlDictionary))
-                return declaration.nullable
+                return declaration.isNullable
             return false
         }
+    }
+
+    class Void(
+        val name: String,
+    ): ResolvedIdlType {
+        override val isNullable: Boolean = false
+        override fun canConsume(value: IdlValue) = false
     }
 
     class Union(
