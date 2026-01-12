@@ -1,5 +1,5 @@
 <div>
-  <img width="120" src="./.github/icon.webp" alt="logo" align="left">
+  <img width="140" src="./.github/icon.webp" alt="logo" align="left">
   <div>
         <h3>webidl-kt</h3>
         Small Kotlin Multipaltform library for parsing <a href="https://webidl.spec.whatwg.org/">WebIDL</a>. 
@@ -8,6 +8,9 @@
   </div>
 </div>
 <br>
+
+<a href="LICENSE"><img src="https://img.shields.io/github/license/husker-dev/webidl-kt?style=flat-square"></a>
+<a href="https://github.com/husker-dev/webidl-kt/releases/latest"><img src="https://img.shields.io/github/v/release/husker-dev/webidl-kt?style=flat-square"></a>
 
 ## Dependency
 
