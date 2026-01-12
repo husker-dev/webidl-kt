@@ -16,7 +16,7 @@
 
 ```kotlin
 dependencies {
-    implementation("com.huskerdev:webidl-kt:1.0.0")
+    implementation("com.huskerdev:webidl-kt:1.0.1")
 }
 ```
 
