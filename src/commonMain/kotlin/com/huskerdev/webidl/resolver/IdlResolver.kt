@@ -23,14 +23,19 @@ import com.huskerdev.webidl.parser.IdlSetter
 import com.huskerdev.webidl.parser.IdlStringifier
 import com.huskerdev.webidl.parser.IdlType
 import com.huskerdev.webidl.parser.IdlTypeDef
+import kotlinx.serialization.Serializable
 
+@Serializable
 class IdlResolver(
     val root: IdlDefinitionRoot,
-    env: WebIDLEnv = WebIDLEnv.Default
+    val builtinTypes: Map<String, BuiltinIdlDeclaration>
 ) {
-    val builtinTypes: Map<String, BuiltinIdlDeclaration> = env.builtinTypes.mapValues {
+    constructor(
+        root: IdlDefinitionRoot,
+        env: WebIDLEnv = WebIDLEnv.Default
+    ): this(root, env.builtinTypes.mapValues {
         BuiltinIdlDeclaration(it.key, it.value)
-    }
+    })
 
     val interfaces: Map<String, ResolvedIdlInterface> = linkedMapOf()
 

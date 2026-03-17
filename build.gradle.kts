@@ -3,11 +3,12 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.maven.publish)
 }
 
 group = "com.huskerdev"
-version = "1.0.1"
+version = "1.0.2"
 
 kotlin {
 
@@ -58,6 +59,9 @@ kotlin {
     androidNativeArm32()
     androidNativeArm64()
 
+    sourceSets.commonMain.dependencies {
+        implementation(libs.kotlin.serialization)
+    }
     sourceSets.commonTest.dependencies {
         implementation(kotlin("test"))
     }

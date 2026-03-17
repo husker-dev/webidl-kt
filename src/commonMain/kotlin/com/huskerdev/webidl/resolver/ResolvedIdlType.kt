@@ -1,12 +1,15 @@
 package com.huskerdev.webidl.resolver
 
 import com.huskerdev.webidl.parser.IdlValue
+import kotlinx.serialization.Serializable
 
+@Serializable
 sealed interface ResolvedIdlType {
     val isNullable: Boolean
 
     fun canConsume(value: IdlValue): Boolean
 
+    @Serializable
     class Default(
         val declaration: ResolvedIdlDeclaration,
         val parameters: List<ResolvedIdlType>,
@@ -61,6 +64,7 @@ sealed interface ResolvedIdlType {
         }
     }
 
+    @Serializable
     class Void(
         val name: String,
     ): ResolvedIdlType {
@@ -68,6 +72,7 @@ sealed interface ResolvedIdlType {
         override fun canConsume(value: IdlValue) = false
     }
 
+    @Serializable
     class Union(
         val types: List<ResolvedIdlType>,
         override val isNullable: Boolean

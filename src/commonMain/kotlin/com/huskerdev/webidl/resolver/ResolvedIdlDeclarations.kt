@@ -2,12 +2,16 @@ package com.huskerdev.webidl.resolver
 
 import com.huskerdev.webidl.parser.IdlAttributedHolder
 import com.huskerdev.webidl.parser.IdlExtendedAttribute
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 sealed interface ResolvedIdlDeclaration: IdlAttributedHolder {
     val name: String
     val isNullable: Boolean
 }
 
+@Serializable
 class BuiltinIdlDeclaration(
     override val name: String,
     val kind: WebIDLBuiltinKind
@@ -17,6 +21,7 @@ class BuiltinIdlDeclaration(
     override val isNullable = kind.nullable
 }
 
+@Serializable
 class ResolvedIdlInterface(
     override val name: String,
     val isCallback: Boolean,
@@ -77,6 +82,7 @@ class ResolvedIdlInterface(
     }
 }
 
+@Serializable
 class ResolvedIdlDictionary(
     override val name: String,
     override val attributes: List<IdlExtendedAttribute>,
@@ -88,6 +94,7 @@ class ResolvedIdlDictionary(
     val fields = arrayListOf<ResolvedIdlField.Declaration>()
 }
 
+@Serializable
 class ResolvedIdlEnum(
     override val name: String,
     val elements: List<String>,
@@ -96,11 +103,13 @@ class ResolvedIdlEnum(
     override val isNullable = false
 }
 
+@Serializable
 class ResolvedIdlTypeDef(
     override val name: String,
     private var parserType: com.huskerdev.webidl.parser.IdlType?,
     override val attributes: List<IdlExtendedAttribute>,
 ): ResolvedIdlDeclaration {
+    @SerialName("_type")
     lateinit var type: ResolvedIdlType
         private set
 
@@ -114,16 +123,19 @@ class ResolvedIdlTypeDef(
     }
 }
 
+@Serializable
 class ResolvedIdlCallbackFunction(
     override val name: String,
     override val attributes: List<IdlExtendedAttribute>,
 ): ResolvedIdlDeclaration {
     override val isNullable = false
 
+    @SerialName("_type")
     lateinit var type: ResolvedIdlType
     lateinit var args: List<ResolvedIdlField.Argument>
 }
 
+@Serializable
 class ResolvedIdlNamespace(
     override val name: String,
     override val attributes: List<IdlExtendedAttribute>,
@@ -135,6 +147,7 @@ class ResolvedIdlNamespace(
     val operations = arrayListOf<ResolvedIdlOperation>()
 }
 
+@Serializable
 enum class WebIDLBuiltinKind(
     val nullable: Boolean = false,
     val types: Int = 0
