@@ -1,3 +1,6 @@
+@file:OptIn(ExperimentalWasmDsl::class)
+
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -8,7 +11,7 @@ plugins {
 }
 
 group = "com.huskerdev"
-version = "1.0.2"
+version = "1.0.3"
 
 kotlin {
 
@@ -24,6 +27,11 @@ kotlin {
         browser()
         nodejs()
     }
+    wasmJs {
+        browser()
+        nodejs()
+    }
+    wasmWasi()
 
     android {
         namespace = group.toString()
