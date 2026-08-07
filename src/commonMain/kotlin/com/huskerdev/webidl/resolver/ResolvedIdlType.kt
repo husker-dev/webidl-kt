@@ -10,7 +10,7 @@ sealed interface ResolvedIdlType {
     fun canConsume(value: IdlValue): Boolean
 
     @Serializable
-    class Default(
+    data class Default(
         val declaration: ResolvedIdlDeclaration,
         val parameters: List<ResolvedIdlType>,
         override val isNullable: Boolean,
@@ -65,7 +65,7 @@ sealed interface ResolvedIdlType {
     }
 
     @Serializable
-    class Void(
+    data class Void(
         val name: String,
     ): ResolvedIdlType {
         override val isNullable: Boolean = false
@@ -73,7 +73,7 @@ sealed interface ResolvedIdlType {
     }
 
     @Serializable
-    class Union(
+    data class Union(
         val types: List<ResolvedIdlType>,
         override val isNullable: Boolean
     ): ResolvedIdlType {
