@@ -31,7 +31,9 @@ kotlin {
         browser()
         nodejs()
     }
-    wasmWasi()
+    wasmWasi {
+        nodejs()
+    }
 
     android {
         namespace = group.toString()
@@ -68,7 +70,8 @@ kotlin {
     androidNativeArm64()
 
     sourceSets.commonMain.dependencies {
-        implementation(libs.kotlin.serialization)
+        implementation(libs.kotlinx.serialization)
+        implementation(libs.kotlinx.io)
     }
     sourceSets.commonTest.dependencies {
         implementation(kotlin("test"))

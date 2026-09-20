@@ -1,13 +1,15 @@
 [versions]
 
-kotlin = "2.4.10"
-kotlin_serialization = "1.11.0"
-android_plugin = "9.1.1"
+kotlin = "2.4.20"
+kotlinx_serialization = "1.11.0"
+kotlinx_io = "0.9.1"
+android_plugin = "9.4.1"
 maven_publish = "0.37.0"
 
 [libraries]
 
-kotlin-serialization    = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlin_serialization" }
+kotlinx-serialization    = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx_serialization" }
+kotlinx-io               = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx_io" }
 
 [plugins]
 

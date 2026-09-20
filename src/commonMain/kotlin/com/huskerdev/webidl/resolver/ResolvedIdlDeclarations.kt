@@ -24,8 +24,8 @@ class BuiltinIdlDeclaration(
 @Serializable
 class ResolvedIdlInterface(
     override val name: String,
-    val isCallback: Boolean,
-    override val attributes: List<IdlExtendedAttribute>,
+    val isCallback: Boolean = false,
+    override val attributes: List<IdlExtendedAttribute> = emptyList(),
 ): ResolvedIdlDeclaration {
     override val isNullable = true
 
@@ -85,7 +85,7 @@ class ResolvedIdlInterface(
 @Serializable
 class ResolvedIdlDictionary(
     override val name: String,
-    override val attributes: List<IdlExtendedAttribute>,
+    override val attributes: List<IdlExtendedAttribute> = emptyList(),
 ): ResolvedIdlDeclaration {
     override val isNullable = true
 
@@ -98,7 +98,7 @@ class ResolvedIdlDictionary(
 class ResolvedIdlEnum(
     override val name: String,
     val elements: List<String>,
-    override val attributes: List<IdlExtendedAttribute>,
+    override val attributes: List<IdlExtendedAttribute> = emptyList(),
 ): ResolvedIdlDeclaration {
     override val isNullable = false
 }
@@ -107,7 +107,7 @@ class ResolvedIdlEnum(
 class ResolvedIdlTypeDef(
     override val name: String,
     private var parserType: com.huskerdev.webidl.parser.IdlType?,
-    override val attributes: List<IdlExtendedAttribute>,
+    override val attributes: List<IdlExtendedAttribute> = emptyList(),
 ): ResolvedIdlDeclaration {
     @SerialName("_type")
     lateinit var type: ResolvedIdlType
@@ -126,7 +126,7 @@ class ResolvedIdlTypeDef(
 @Serializable
 class ResolvedIdlCallbackFunction(
     override val name: String,
-    override val attributes: List<IdlExtendedAttribute>,
+    override val attributes: List<IdlExtendedAttribute> = emptyList(),
 ): ResolvedIdlDeclaration {
     override val isNullable = false
 
@@ -138,7 +138,7 @@ class ResolvedIdlCallbackFunction(
 @Serializable
 class ResolvedIdlNamespace(
     override val name: String,
-    override val attributes: List<IdlExtendedAttribute>,
+    override val attributes: List<IdlExtendedAttribute> = emptyList(),
 ): ResolvedIdlDeclaration {
     override val isNullable: Boolean = false
 

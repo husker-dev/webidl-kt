@@ -12,8 +12,8 @@ sealed interface ResolvedIdlType {
     @Serializable
     data class Default(
         val declaration: ResolvedIdlDeclaration,
-        val parameters: List<ResolvedIdlType>,
-        override val isNullable: Boolean,
+        val parameters: List<ResolvedIdlType> = emptyList(),
+        override val isNullable: Boolean = false,
     ): ResolvedIdlType {
         override fun canConsume(value: IdlValue): Boolean {
             if(declaration is ResolvedIdlDictionary)
