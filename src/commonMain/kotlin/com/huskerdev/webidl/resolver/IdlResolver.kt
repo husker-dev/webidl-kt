@@ -257,7 +257,6 @@ class IdlResolver(
         attributes
     )
 
-
     private fun IdlOperation.toFunction() = ResolvedIdlOperation(
         name,
         findType(type),
