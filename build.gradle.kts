@@ -81,7 +81,7 @@ kotlin {
 mavenPublishing {
     publishToMavenCentral()
 
-    //signAllPublications()
+    signAllPublications()
 
     coordinates(group.toString(), "webidl-kt", version.toString())
 
