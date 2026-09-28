@@ -49,7 +49,7 @@ class InterfaceMixins {
                     assertDefaultType(type, "short")
                 }
                 assertOperation(operations[0], "addEventListener") {
-                    assertDefaultType(type, "undefined")
+                    assertVoidType(type, "undefined")
                     assertArgument(args[0], "type") {
                         assertDefaultType(type, "DOMString")
                     }

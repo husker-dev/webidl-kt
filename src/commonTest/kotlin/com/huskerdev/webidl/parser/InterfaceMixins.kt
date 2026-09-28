@@ -17,16 +17,18 @@ class InterfaceMixins {
             partial interface mixin SomeMixin {
                 /* mixin_members... */
             };
-        """.trimIndent()).apply {
-            assertEquals(definitions.size, 2)
+        """.trimIndent()).first.apply {
+            assertEquals(2, this.definitions.size)
 
-            assertInterface(definitions[0],
+            assertInterface(
+                this.definitions[0],
                 name = "SomeMixin",
                 implements = null,
                 definitions = 0,
                 isMixin = true
             )
-            assertInterface(definitions[1],
+            assertInterface(
+                this.definitions[1],
                 name = "SomeMixin",
                 implements = null,
                 definitions = 0,
@@ -52,29 +54,31 @@ class InterfaceMixins {
             };
             
             Entry includes Observable;
-        """.trimIndent()).apply {
-            assertEquals(definitions.size, 3)
+        """.trimIndent()).first.apply {
+            assertEquals(3, this.definitions.size)
 
-            assertInterface(definitions[0],
+            assertInterface(
+                this.definitions[0],
                 name = "Entry",
                 implements = null,
                 definitions = 1
             ) {
-                assertField(definitions[0], "entryType", "short", isReadOnly = true, isAttribute = true)
+                assertField(this.definitions[0], "entryType", "short", isReadOnly = true, isAttribute = true)
             }
-            assertInterface(definitions[1],
+            assertInterface(
+                this.definitions[1],
                 name = "Observable",
                 implements = null,
                 definitions = 1,
                 isMixin = true
             ) {
-                assertOperation(definitions[0], "addEventListener", "undefined", argsCount = 3) {
+                assertOperation(this.definitions[0], "addEventListener", "undefined", argsCount = 3) {
                     assertField(args[0], "type", "DOMString")
                     assertField(args[1], "listener", "EventListener")
                     assertField(args[2], "useCapture", "boolean")
                 }
             }
-            assertIncludes(definitions[2], "Entry", "Observable")
+            assertIncludes(this.definitions[2], "Entry", "Observable")
         }
     }
 }

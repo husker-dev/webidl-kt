@@ -11,10 +11,10 @@ class CallbackFunctions {
     fun test1(){
         WebIDL.parseDefinitions("""
             callback identifier = long (/* arguments... */);
-        """.trimIndent()).apply {
-            assertEquals(definitions.size, 1)
+        """.trimIndent()).first.apply {
+            assertEquals(1, this.definitions.size)
 
-            assertCallbackFunction(definitions[0], "identifier") {
+            assertCallbackFunction(this.definitions[0], "identifier") {
                 assertOperation(operation, "", "long", argsCount = 0)
             }
         }
@@ -29,24 +29,25 @@ class CallbackFunctions {
             interface AsyncOperations {
                 undefined performOperation(AsyncOperationCallback whenFinished);
             };
-        """.trimIndent()).apply {
-            assertEquals(definitions.size, 2)
+        """.trimIndent()).first.apply {
+            assertEquals(2, this.definitions.size)
 
-            assertCallbackFunction(definitions[0], "AsyncOperationCallback") {
+            assertCallbackFunction(this.definitions[0], "AsyncOperationCallback") {
                 assertOperation(operation, "", "undefined", argsCount = 1) {
                     assertField(args[0], "status", "DOMString")
                 }
             }
 
-            assertInterface(definitions[1],
+            assertInterface(
+                this.definitions[1],
                 name = "AsyncOperations",
                 implements = null,
                 definitions = 1,
                 attributes = 1
             ) {
-                assertAttributeIdent(attributes[0], "Exposed", "Window")
+                assertAttributeIdent(attributes!![0], "Exposed", "Window")
 
-                assertOperation(definitions[0], "performOperation", "undefined", argsCount = 1) {
+                assertOperation(this.definitions[0], "performOperation", "undefined", argsCount = 1) {
                     assertField(args[0], "whenFinished", "AsyncOperationCallback")
                 }
             }

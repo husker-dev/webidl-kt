@@ -42,16 +42,17 @@ class Types {
             |interface A {
             |    ${types.joinToString("\n|    ") { "$it a();" }}
             |};
-        """.trimMargin("|")).apply {
-            assertEquals(definitions.size, 1)
+        """.trimMargin("|")).first.apply {
+            assertEquals(1, this.definitions.size)
 
-            assertInterface(definitions[0],
+            assertInterface(
+                this.definitions[0],
                 name = "A",
                 implements = null,
                 definitions = 27
             ) {
                 types.forEachIndexed { index, string ->
-                    assertOperation(definitions[index], "a", string, 0)
+                    assertOperation(this.definitions[index], "a", string, 0)
                 }
             }
         }

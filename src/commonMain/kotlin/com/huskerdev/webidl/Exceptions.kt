@@ -1,51 +1,42 @@
 package com.huskerdev.webidl
 
 import com.huskerdev.webidl.lexer.WebIDLLexer
-import kotlin.math.max
 
+@Suppress("unused")
+open class WebIDLErrorException(
+    val bounds: IdlElementBounds,
+    val errorTitle: String,
+    val errorMessage: String
+): Exception("$errorTitle | $errorMessage $bounds")
 
-open class WebIDLParserException(
-    lineIndex: Int,
-    line: CharSequence,
-    lineCharIndex: Int,
-    @Suppress("unused") val errorMessage: String
-): Exception(createString(lineIndex, line, lineCharIndex, errorMessage)) {
+// Syntax error
 
+open class WebIDLSyntaxErrorException(
+    bounds: IdlElementBounds,
+    errorMessage: String
+): WebIDLErrorException(
+    bounds = bounds,
+    errorTitle = "Syntax error",
+    errorMessage = errorMessage
+) {
     constructor(
         lexeme: WebIDLLexer.Lexeme,
         errorMessage: String
-    ): this(lexeme.lineIndex, lexeme.line, lexeme.lineCharIndex+1, errorMessage)
-
-    companion object {
-        private fun createString(
-            lineIndex: Int,
-            line: CharSequence,
-            lineCharIndex: Int,
-            message: String?
-        ): String = buildString {
-            append("Syntax error at line ")
-            append(lineIndex+1)
-            append(":\n")
-            append(line)
-            append('\n')
-            append(" ".repeat(max(0, lineCharIndex-1)))
-            append("^ ")
-            append(message)
-            append('\n')
-        }
-    }
+    ): this(
+        lexeme.bounds,
+        errorMessage = errorMessage
+    )
 }
 
 class WebIDLWrongSymbolException(
     lexeme: WebIDLLexer.Lexeme,
     expected: String
-): WebIDLParserException(lexeme, "Expected '$expected' but found: '${lexeme.content}'")
+): WebIDLSyntaxErrorException(lexeme, "Expected '$expected' but found: '${lexeme.content}'.")
 
 class WebIDLUnexpectedSymbolException(
     lexeme: WebIDLLexer.Lexeme,
     content: String
-): WebIDLParserException(lexeme, "Unexpected symbol: $content")
-
+): WebIDLSyntaxErrorException(lexeme, "Unexpected symbol: $content.")
 
 internal fun expectType(
     lexeme: WebIDLLexer.Lexeme,
@@ -56,4 +47,21 @@ internal fun expectType(
         throw WebIDLWrongSymbolException(lexeme, typeString)
 }
 
-open class WebIDLResolverException(message: String): Exception(message)
+// Type error
+
+open class WebIDLTypeErrorException(
+    bounds: IdlElementBounds,
+    message: String
+): WebIDLErrorException(
+    bounds = bounds,
+    errorTitle = "Type error",
+    errorMessage = message
+)
+
+open class WebIDLUnresolvedReferenceException(
+    bounds: IdlElementBounds,
+    name: String
+): WebIDLTypeErrorException(
+    bounds = bounds,
+    message = "Unresolved reference '$name'."
+)

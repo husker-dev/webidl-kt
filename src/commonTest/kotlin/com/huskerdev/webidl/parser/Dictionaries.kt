@@ -17,15 +17,17 @@ class Dictionaries {
             dictionary Derived : Base {
                 /* dictionary_members... */
             };
-        """.trimIndent()).apply {
-            assertEquals(definitions.size, 2)
+        """.trimIndent()).first.apply {
+            assertEquals(2, this.definitions.size)
 
-            assertDictionary(definitions[0],
+            assertDictionary(
+                this.definitions[0],
                 name = "Base",
                 implements = null,
                 definitions = 0
             )
-            assertDictionary(definitions[1],
+            assertDictionary(
+                this.definitions[1],
                 name = "Derived",
                 implements = "Base",
                 definitions = 0
@@ -40,10 +42,11 @@ class Dictionaries {
                 DOMString name;
                 sequence<unsigned long> serviceIdentifiers;
             };
-        """.trimIndent()).apply {
-            assertEquals(definitions.size, 1)
+        """.trimIndent()).first.apply {
+            assertEquals(1, this.definitions.size)
 
-            assertDictionary(definitions[0],
+            assertDictionary(
+                this.definitions[0],
                 name = "Descriptor",
                 implements = null,
                 definitions = 2
@@ -64,15 +67,17 @@ class Dictionaries {
             partial dictionary SomeDictionary {
                 /* dictionary_members... */
             };
-        """.trimIndent()).apply {
-            assertEquals(definitions.size, 2)
+        """.trimIndent()).first.apply {
+            assertEquals(2, this.definitions.size)
 
-            assertDictionary(definitions[0],
+            assertDictionary(
+                this.definitions[0],
                 name = "SomeDictionary",
                 implements = null,
                 definitions = 0
             )
-            assertDictionary(definitions[1],
+            assertDictionary(
+                this.definitions[1],
                 name = "SomeDictionary",
                 implements = null,
                 definitions = 0,

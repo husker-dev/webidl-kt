@@ -28,14 +28,14 @@ class CallbackFunctions {
             };
         """.trimIndent()).apply {
             assertCallbackFunction(callbacks.values.toList()[0], "AsyncOperationCallback") {
-                assertDefaultType(type, "undefined")
+                assertVoidType(type, "undefined")
                 assertArgument(args[0], "status") {
                     assertDefaultType(type, "DOMString")
                 }
             }
             assertInterface(interfaces.values.toList()[0], "AsyncOperations") {
                 assertOperation(operations[0], "performOperation") {
-                    assertDefaultType(type, "undefined")
+                    assertVoidType(type, "undefined")
                     assertArgument(args[0], "whenFinished") {
                         assertDefaultType(type, "AsyncOperationCallback")
                     }

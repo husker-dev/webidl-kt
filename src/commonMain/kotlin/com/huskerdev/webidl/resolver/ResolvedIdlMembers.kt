@@ -1,12 +1,15 @@
 package com.huskerdev.webidl.resolver
 
-import com.huskerdev.webidl.parser.IdlAttributedHolder
-import com.huskerdev.webidl.parser.IdlExtendedAttribute
+import com.huskerdev.webidl.IdlElementBounds
+import com.huskerdev.webidl.parser.IdlAttributeHolder
+import com.huskerdev.webidl.parser.IdlAttributes
 import com.huskerdev.webidl.parser.IdlValue
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed interface ResolvedIdlMember: IdlAttributedHolder
+sealed interface ResolvedIdlMember: IdlAttributeHolder {
+    val bounds: IdlElementBounds
+}
 
 @Serializable
 sealed interface ResolvedIdlField: ResolvedIdlMember {
@@ -25,7 +28,8 @@ sealed interface ResolvedIdlField: ResolvedIdlMember {
         val isInherit: Boolean,
         val isConst: Boolean,
         val isRequired: Boolean,
-        override val attributes: List<IdlExtendedAttribute>,
+        override val attributes: IdlAttributes?,
+        override val bounds: IdlElementBounds = IdlElementBounds()
     ): ResolvedIdlField
 
     @Serializable
@@ -35,7 +39,8 @@ sealed interface ResolvedIdlField: ResolvedIdlMember {
         override val value: IdlValue?,
         val isOptional: Boolean,
         val isVariadic: Boolean,
-        override val attributes: List<IdlExtendedAttribute>,
+        override val attributes: IdlAttributes?,
+        override val bounds: IdlElementBounds = IdlElementBounds()
     ): ResolvedIdlField
 }
 
@@ -45,11 +50,13 @@ class ResolvedIdlOperation(
     val type: ResolvedIdlType,
     val args: List<ResolvedIdlField.Argument>,
     val isStatic: Boolean,
-    override val attributes: List<IdlExtendedAttribute>,
+    override val attributes: IdlAttributes?,
+    override val bounds: IdlElementBounds = IdlElementBounds()
 ): ResolvedIdlMember
 
 @Serializable
 class ResolvedIdlConstructor(
     val args: List<ResolvedIdlField.Argument>,
-    override val attributes: List<IdlExtendedAttribute>,
+    override val attributes: IdlAttributes?,
+    override val bounds: IdlElementBounds = IdlElementBounds()
 ): ResolvedIdlMember

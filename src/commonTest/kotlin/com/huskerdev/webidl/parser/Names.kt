@@ -19,48 +19,56 @@ class Names {
             enum enumeration_identifier { "enum", "values" /* , ... */ };
             callback callback_identifier = void (/* arguments... */);
             callback interface callback_interface_identifier { /* interface_members... */ };
-        """.trimIndent()).apply {
-            assertEquals(definitions.size, 9)
+        """.trimIndent()).first.apply {
+            assertEquals(9, this.definitions.size)
 
-            assertInterface(definitions[0],
+            assertInterface(
+                this.definitions[0],
                 name = "interface_identifier",
                 implements = null,
                 definitions = 0
             )
-            assertInterface(definitions[1],
+            assertInterface(
+                this.definitions[1],
                 name = "interface_identifier",
                 implements = null,
                 definitions = 0,
                 isPartial = true
             )
-            assertNamespace(definitions[2],
+            assertNamespace(
+                this.definitions[2],
                 name = "namespace_identifier",
                 definitions = 0
             )
-            assertNamespace(definitions[3],
+            assertNamespace(
+                this.definitions[3],
                 name = "namespace_identifier",
                 definitions = 0,
                 isPartial = true
             )
-            assertDictionary(definitions[4],
+            assertDictionary(
+                this.definitions[4],
                 name = "dictionary_identifier",
                 implements = null,
                 definitions = 0
             )
-            assertDictionary(definitions[5],
+            assertDictionary(
+                this.definitions[5],
                 name = "dictionary_identifier",
                 implements = null,
                 definitions = 0,
                 isPartial = true
             )
-            assertEnum(definitions[6],
+            assertEnum(
+                this.definitions[6],
                 name = "enumeration_identifier",
                 elements = listOf("enum", "values")
             )
-            assertCallbackFunction(definitions[7], "callback_identifier") {
+            assertCallbackFunction(this.definitions[7], "callback_identifier") {
                 assertOperation(operation, "", "void", argsCount = 0)
             }
-            assertInterface(definitions[8],
+            assertInterface(
+                this.definitions[8],
                 name = "callback_interface_identifier",
                 implements = null,
                 definitions = 0,
@@ -82,21 +90,23 @@ class Names {
             dictionary dictionary_identifier {
                 long dictionary_member_identifier;
             };
-        """.trimIndent()).apply {
-            assertEquals(definitions.size, 3)
+        """.trimIndent()).first.apply {
+            assertEquals(3, this.definitions.size)
 
-            assertInterface(definitions[0],
+            assertInterface(
+                this.definitions[0],
                 name = "interface_identifier",
                 implements = null,
                 definitions = 1,
                 attributes = 1
             ) {
-                assertAttribute(attributes[0], "extended_attributes")
+                assertAttribute(attributes!![0], "extended_attributes")
 
-                assertField(definitions[0], "attribute_identifier", "long", isAttribute = true)
+                assertField(this.definitions[0], "attribute_identifier", "long", isAttribute = true)
             }
-            assertTypedef(definitions[1], "long", "typedef_identifier")
-            assertDictionary(definitions[2],
+            assertTypedef(this.definitions[1], "long", "typedef_identifier")
+            assertDictionary(
+                this.definitions[2],
                 name = "dictionary_identifier",
                 implements = null,
                 definitions = 1
@@ -113,15 +123,16 @@ class Names {
                 const long constant_identifier = 42;
             };
         """.trimIndent()
-        ).apply {
-            assertEquals(definitions.size, 1)
+        ).first.apply {
+            assertEquals(1, this.definitions.size)
 
-            assertInterface(definitions[0],
+            assertInterface(
+                this.definitions[0],
                 name = "interface_identifier",
                 implements = null,
                 definitions = 1
             ) {
-                assertField(definitions[0], "constant_identifier", "long", isConst = true)
+                assertField(this.definitions[0], "constant_identifier", "long", isConst = true)
             }
         }
     }
@@ -133,15 +144,16 @@ class Names {
                 long operation_identifier(/* arguments... */);
             };
         """.trimIndent()
-        ).apply {
-            assertEquals(definitions.size, 1)
+        ).first.apply {
+            assertEquals(1, this.definitions.size)
 
-            assertInterface(definitions[0],
+            assertInterface(
+                this.definitions[0],
                 name = "interface_identifier",
                 implements = null,
                 definitions = 1
             ) {
-                assertOperation(definitions[0], "operation_identifier", "long", argsCount = 0)
+                assertOperation(this.definitions[0], "operation_identifier", "long", argsCount = 0)
             }
         }
     }
@@ -153,15 +165,16 @@ class Names {
                 long operation_identifier(long argument_identifier /* , ... */);
             };
         """.trimIndent()
-        ).apply {
-            assertEquals(definitions.size, 1)
+        ).first.apply {
+            assertEquals(1, this.definitions.size)
 
-            assertInterface(definitions[0],
+            assertInterface(
+                this.definitions[0],
                 name = "interface_identifier",
                 implements = null,
                 definitions = 1
             ) {
-                assertOperation(definitions[0], "operation_identifier", "long", argsCount = 1) {
+                assertOperation(this.definitions[0], "operation_identifier", "long", argsCount = 1) {
                     assertField(args[0], "argument_identifier", "long")
                 }
             }
@@ -182,30 +195,32 @@ class Names {
             
             typedef sequence<long> SequenceOfLongs;
         """.trimIndent()
-        ).apply {
-            assertEquals(definitions.size, 3)
+        ).first.apply {
+            assertEquals(3, this.definitions.size)
 
-            assertInterface(definitions[0],
+            assertInterface(
+                this.definitions[0],
                 name = "B",
                 implements = "A",
                 definitions = 1,
                 attributes = 1
             ) {
-                assertAttributeIdent(attributes[0], "Exposed", "Window")
+                assertAttributeIdent(attributes!![0], "Exposed", "Window")
 
-                assertOperation(definitions[0], "f", "undefined", argsCount = 1) {
+                assertOperation(this.definitions[0], "f", "undefined", argsCount = 1) {
                     assertField(args[0], "x", "SequenceOfLongs")
                 }
             }
-            assertInterface(definitions[1],
+            assertInterface(
+                this.definitions[1],
                 name = "A",
                 implements = null,
                 definitions = 0,
                 attributes = 1
             ) {
-                assertAttributeIdent(attributes[0], "Exposed", "Window")
+                assertAttributeIdent(attributes!![0], "Exposed", "Window")
             }
-            assertTypedef(definitions[2], "sequence<long>", "SequenceOfLongs")
+            assertTypedef(this.definitions[2], "sequence<long>", "SequenceOfLongs")
         }
     }
 
@@ -241,42 +256,44 @@ class Names {
                 attribute DOMString? _value;
             };
         """.trimIndent()
-        ).apply {
-            assertEquals(definitions.size, 3)
+        ).first.apply {
+            assertEquals(3, this.definitions.size)
 
-            assertTypedef(definitions[0], "double", "number")
+            assertTypedef(this.definitions[0], "double", "number")
 
-            assertInterface(definitions[1],
+            assertInterface(
+                this.definitions[1],
                 name = "System",
                 implements = null,
                 definitions = 3,
                 attributes = 1
             ) {
-                assertAttributeIdent(attributes[0], "Exposed", "Window")
+                assertAttributeIdent(attributes!![0], "Exposed", "Window")
 
-                assertOperation(definitions[0], "createObject", "object", argsCount = 1) {
+                assertOperation(this.definitions[0], "createObject", "object", argsCount = 1) {
                     assertField(args[0], "_interface", "DOMString")
                 }
-                assertOperation(definitions[1], "getObjects", "sequence<object>", argsCount = 1) {
+                assertOperation(this.definitions[1], "getObjects", "sequence<object>", argsCount = 1) {
                     assertField(args[0], "interface", "DOMString")
                 }
-                assertGetter(definitions[2]) {
+                assertGetter(this.definitions[2]) {
                     assertOperation(operation, "", "DOMString", argsCount = 1) {
                         assertField(args[0], "keyName", "DOMString")
                     }
                 }
             }
 
-            assertInterface(definitions[2],
+            assertInterface(
+                this.definitions[2],
                 name = "TextField",
                 implements = null,
                 definitions = 2,
                 attributes = 1
             ) {
-                assertAttributeIdent(attributes[0], "Exposed", "Window")
+                assertAttributeIdent(attributes!![0], "Exposed", "Window")
 
-                assertField(definitions[0], "_const", "boolean", isAttribute = true)
-                assertField(definitions[1], "_value", "DOMString?", isAttribute = true)
+                assertField(this.definitions[0], "_const", "boolean", isAttribute = true)
+                assertField(this.definitions[1], "_value", "DOMString?", isAttribute = true)
             }
         }
     }

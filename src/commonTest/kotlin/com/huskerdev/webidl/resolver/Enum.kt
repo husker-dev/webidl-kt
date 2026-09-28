@@ -38,7 +38,7 @@ class Enum {
                     assertDefaultType(type, "double")
                 }
                 assertOperation(operations[0], "initialize") {
-                    assertDefaultType(type, "undefined")
+                    assertVoidType(type, "undefined")
                     assertArgument(args[0], "type") {
                         assertDefaultType(type, "MealType")
                     }

@@ -14,15 +14,16 @@ class Files {
 
         WebIDL.parseDefinitions(
             stream.reader().buffered().iterator()
-        ).apply {
-            assertEquals(1, definitions.size)
+        ).first.apply {
+            assertEquals(1, this.definitions.size)
 
-            assertInterface(definitions[0],
+            assertInterface(
+                this.definitions[0],
                 name = "TestInterface",
                 implements = null,
                 definitions = 1
             ) {
-                assertField(definitions[0], "field", "long")
+                assertField(this.definitions[0], "field", "long")
             }
         }
     }

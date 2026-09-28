@@ -127,7 +127,7 @@ class Names {
         ).apply {
             assertInterface(interfaces.values.toList()[0], "B", implements = interfaces.values.toList()[1]) {
                 assertOperation(operations[0], "f") {
-                    assertDefaultType(type, "undefined")
+                    assertVoidType(type, "undefined")
                     assertArgument(args[0], "x") {
                         assertDefaultType(type, "SequenceOfLongs")
                     }

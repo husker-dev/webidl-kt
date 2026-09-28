@@ -13,16 +13,17 @@ class CallbackInterfaces {
             callback interface identifier {
                 void a();
             };
-        """.trimIndent()).apply {
-            assertEquals(definitions.size, 1)
+        """.trimIndent()).first.apply {
+            assertEquals(1, this.definitions.size)
 
-            assertInterface(definitions[0],
+            assertInterface(
+                this.definitions[0],
                 name = "identifier",
                 implements = null,
                 definitions = 1,
                 isCallback = true
             ) {
-                assertOperation(definitions[0], "a", "void", argsCount = 0)
+                assertOperation(this.definitions[0], "a", "void", argsCount = 0)
             }
         }
     }

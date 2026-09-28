@@ -29,13 +29,13 @@ fun assertField(
 
     assertIs<IdlField>(def)
 
-    assertEquals(name, def.name)
+    assertEquals(name, def.name.text)
     assertEquals(type, WebIDLPrinter.printType(def.type))
     if(value != null) {
         assertNotNull(def.value)
         assertEquals(value, WebIDLPrinter.printValue(def.value))
     }
-    assertEquals(attributes, def.attributes.size, "attributes mismatch")
+    assertEquals(attributes, def.attributes?.size ?: 0, "attributes mismatch")
 
     assertEquals(isAttribute, def.isAttribute, "expected 'attribute'")
     assertEquals(isStatic, def.isStatic, "expected 'static'")
@@ -63,12 +63,12 @@ fun assertOperation(
 
     assertIs<IdlOperation>(def)
 
-    assertEquals(name, def.name)
+    assertEquals(name, def.name.text)
     assertEquals(type, WebIDLPrinter.printType(def.type))
     assertEquals(argsCount, def.args.size)
     assertEquals(isStatic, def.isStatic, "expected 'static'")
 
-    assertEquals(attributes, def.attributes.size, "attributes mismatch")
+    assertEquals(attributes, def.attributes?.size ?: 0, "attributes mismatch")
 
     block(def)
 }
@@ -85,7 +85,7 @@ fun assertConstructor(
     assertIs<IdlConstructor>(def)
 
     assertEquals(argsCount, def.args.size)
-    assertEquals(attributes, def.attributes.size, "attributes mismatch")
+    assertEquals(attributes, def.attributes?.size ?: 0, "attributes mismatch")
 
     block(def)
 }
@@ -106,10 +106,10 @@ fun assertInterface(
 
     assertIs<IdlInterface>(def)
 
-    assertEquals(name, def.name, "name mismatch")
-    assertEquals(implements, def.implements, "implementation mismatch")
+    assertEquals(name, def.name.text, "name mismatch")
+    assertEquals(implements, def.implements?.text, "implementation mismatch")
     assertEquals(definitions, def.definitions.size, "definitions mismatch")
-    assertEquals(attributes, def.attributes.size, "attributes mismatch")
+    assertEquals(attributes, def.attributes?.size ?: 0, "attributes mismatch")
     assertEquals(isPartial, def.isPartial, "expected 'partial'")
     assertEquals(isMixin, def.isMixin, "expected 'mixin'")
     assertEquals(isCallback, def.isCallback, "expected 'callback'")
@@ -131,10 +131,10 @@ fun assertDictionary(
 
     assertIs<IdlDictionary>(def)
 
-    assertEquals(name, def.name, "name mismatch")
-    assertEquals(implements, def.implements, "implementation mismatch")
+    assertEquals(name, def.name.text, "name mismatch")
+    assertEquals(implements, def.implements?.text, "implementation mismatch")
     assertEquals(definitions, def.definitions.size, "definitions mismatch")
-    assertEquals(attributes, def.attributes.size, "attributes mismatch")
+    assertEquals(attributes, def.attributes?.size ?: 0, "attributes mismatch")
     assertEquals(isPartial, def.isPartial, "expected 'partial'")
 
     block(def)
@@ -153,9 +153,9 @@ fun assertNamespace(
 
     assertIs<IdlNamespace>(def)
 
-    assertEquals(name, def.name, "name mismatch")
+    assertEquals(name, def.name.text, "name mismatch")
     assertEquals(definitions, def.definitions.size, "definitions mismatch")
-    assertEquals(attributes, def.attributes.size, "attributes mismatch")
+    assertEquals(attributes, def.attributes?.size ?: 0, "attributes mismatch")
     assertEquals(isPartial, def.isPartial, "expected 'partial'")
 
     block(def)
@@ -171,8 +171,8 @@ fun assertEnum(
 
     assertIs<IdlEnum>(def)
 
-    assertEquals(name, def.name, "name mismatch")
-    assertContentEquals(elements, def.definitions.map { it.name })
+    assertEquals(name, def.name.text, "name mismatch")
+    assertContentEquals(elements, def.elements.map { it.name.text })
 }
 
 @OptIn(ExperimentalContracts::class)
@@ -184,7 +184,7 @@ fun assertCallbackFunction(
     contract { returns() implies (def is IdlCallbackFunction) }
 
     assertIs<IdlCallbackFunction>(def)
-    assertEquals(name, def.name, "name mismatch")
+    assertEquals(name, def.name.text, "name mismatch")
 
     block(def)
 }
@@ -195,7 +195,7 @@ fun assertAttribute(
     name: String
 ){
     assertIs<IdlExtendedAttribute.NoArgs>(attr)
-    assertEquals(name, attr.name)
+    assertEquals(name, attr.name.text)
 }
 
 @OptIn(ExperimentalContracts::class)
@@ -205,8 +205,8 @@ fun assertAttributeIdent(
     identifier: String
 ){
     assertIs<IdlExtendedAttribute.IdentifierValue>(attr)
-    assertEquals(name, attr.name)
-    assertEquals(identifier, attr.identifier)
+    assertEquals(name, attr.name.text)
+    assertEquals(identifier, attr.identifier.text)
 }
 
 @OptIn(ExperimentalContracts::class)
@@ -216,8 +216,8 @@ fun assertIncludes(
     source: String
 ){
     assertIs<IdlIncludes>(attr)
-    assertEquals(target, attr.target)
-    assertEquals(source, attr.source)
+    assertEquals(target, attr.target.text)
+    assertEquals(source, attr.source.text)
 }
 
 @OptIn(ExperimentalContracts::class)
@@ -283,7 +283,7 @@ fun assertTypedef(
 ){
     assertIs<IdlTypeDef>(attr)
     assertEquals(type, WebIDLPrinter.printType(attr.type))
-    assertEquals(identifier, attr.name)
+    assertEquals(identifier, attr.name.text)
 }
 
 @OptIn(ExperimentalContracts::class)

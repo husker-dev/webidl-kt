@@ -110,13 +110,13 @@ class InterfaceMembers {
                     assertDefaultType(type, "boolean")
                 }
                 assertOperation(operations[1], "setDimensions") {
-                    assertDefaultType(type, "undefined")
+                    assertVoidType(type, "undefined")
                     assertArgument(args[0], "size") {
                         assertDefaultType(type, "Dimensions")
                     }
                 }
                 assertOperation(operations[2], "setDimensions") {
-                    assertDefaultType(type, "undefined")
+                    assertVoidType(type, "undefined")
                     assertArgument(args[0], "width") {
                         assertDefaultType(type, "long")
                     }
@@ -144,13 +144,13 @@ class InterfaceMembers {
                     assertDefaultType(type, "long")
                 }
                 assertOperation(operations[0], "union") {
-                    assertDefaultType(type, "undefined")
+                    assertVoidType(type, "undefined")
                     assertArgument(args[0], "ints", isVariadic = true) {
                         assertDefaultType(type, "long")
                     }
                 }
                 assertOperation(operations[1], "intersection") {
-                    assertDefaultType(type, "undefined")
+                    assertVoidType(type, "undefined")
                     assertArgument(args[0], "ints", isVariadic = true) {
                         assertDefaultType(type, "long")
                     }
@@ -169,7 +169,7 @@ class InterfaceMembers {
         """.trimIndent()).apply {
             assertInterface(interfaces.values.toList()[0], "interface_identifier") {
                 assertOperation(operations[0], "identifier1") {
-                    assertDefaultType(type, "void")
+                    assertVoidType(type, "void")
                     assertArgument(args[0], "arg1") {
                         assertDefaultType(type, "long")
                     }
@@ -178,7 +178,7 @@ class InterfaceMembers {
                     }
                 }
                 assertOperation(operations[1], "identifier2") {
-                    assertDefaultType(type, "void")
+                    assertVoidType(type, "void")
                     assertArgument(args[0], "arg1") {
                         assertDefaultType(type, "long")
                     }
@@ -304,7 +304,7 @@ class InterfaceMembers {
                 }
                 assertNotNull(setter)
                 assertOperation(setter!!, "") {
-                    assertDefaultType(type, "undefined")
+                    assertVoidType(type, "undefined")
                     assertArgument(args[0], "propertyName") {
                         assertDefaultType(type, "DOMString")
                     }
@@ -323,7 +323,7 @@ class InterfaceMembers {
                 }
                 assertNotNull(setter)
                 assertOperation(setter!!, "setProperty") {
-                    assertDefaultType(type, "undefined")
+                    assertVoidType(type, "undefined")
                     assertArgument(args[0], "propertyName") {
                         assertDefaultType(type, "DOMString")
                     }
@@ -394,13 +394,13 @@ class InterfaceMembers {
         """.trimIndent()).apply {
             assertInterface(interfaces.values.toList()[0], "B") {
                 assertOperation(operations[0], "f") {
-                    assertDefaultType(type, "undefined")
+                    assertVoidType(type, "undefined")
                     assertArgument(args[0], "w") {
                         assertDefaultType(type, "DOMString")
                     }
                 }
                 assertOperation(operations[1], "f") {
-                    assertDefaultType(type, "undefined")
+                    assertVoidType(type, "undefined")
                     assertArgument(args[0], "w") {
                         assertDefaultType(type, "long")
                     }

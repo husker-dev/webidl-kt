@@ -1,28 +1,6 @@
 package com.huskerdev.webidl
 
-import com.huskerdev.webidl.parser.IdlAsyncIterableLike
-import com.huskerdev.webidl.parser.IdlCallbackFunction
-import com.huskerdev.webidl.parser.IdlConstructor
-import com.huskerdev.webidl.parser.IdlDefinitionRoot
-import com.huskerdev.webidl.parser.IdlDictionary
-import com.huskerdev.webidl.parser.IdlEnum
-import com.huskerdev.webidl.parser.IdlEnumElement
-import com.huskerdev.webidl.parser.IdlExtendedAttribute
-import com.huskerdev.webidl.parser.IdlField
-import com.huskerdev.webidl.parser.IdlGetter
-import com.huskerdev.webidl.parser.IdlImplements
-import com.huskerdev.webidl.parser.IdlIncludes
-import com.huskerdev.webidl.parser.IdlInterface
-import com.huskerdev.webidl.parser.IdlIterable
-import com.huskerdev.webidl.parser.IdlMapLike
-import com.huskerdev.webidl.parser.IdlNamespace
-import com.huskerdev.webidl.parser.IdlOperation
-import com.huskerdev.webidl.parser.IdlSetLike
-import com.huskerdev.webidl.parser.IdlSetter
-import com.huskerdev.webidl.parser.IdlStringifier
-import com.huskerdev.webidl.parser.IdlTypeDef
-import com.huskerdev.webidl.parser.IdlValue
-import com.huskerdev.webidl.parser.IdlType
+import com.huskerdev.webidl.parser.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -30,32 +8,32 @@ class PrinterTest {
 
     @Test
     fun test(){
-        val attrs = listOf(
-            IdlExtendedAttribute.IdentifierValue("Exposed", "Window")
-        )
+        val attrs = IdlAttributes(mutableListOf(
+            IdlExtendedAttribute.IdentifierValue(IdlName("Exposed"), IdlName("Window"))
+        ))
         val args = listOf(
             IdlField(
-                "a",
-                IdlType.Default("DOMString", true),
+                IdlName("a"),
+                IdlType.Default(IdlName("DOMString"), true),
                 IdlValue.StringValue("text"),
                 isOptional = true,
                 attributes = attrs
             ),
             IdlField(
-                "b",
-                IdlType.Default("long long", false),
+                IdlName("b"),
+                IdlType.Default(IdlName("long long"), false),
                 isVariadic = true,
             )
         )
 
-        val root = IdlDefinitionRoot(arrayListOf(
-            IdlInterface("A", attributes = attrs),
+        val root = IdlRoot(definitions = arrayListOf(
+            IdlInterface(IdlName("A"), attributes = attrs),
             IdlInterface(
-                "TestInterface",
+                IdlName("TestInterface"),
                 isCallback = true,
                 isPartial = true,
                 isMixin = true,
-                implements = "A",
+                implements = IdlName("A"),
                 attributes = attrs,
                 definitions = arrayListOf(
                     IdlConstructor(
@@ -63,15 +41,15 @@ class PrinterTest {
                         attributes = attrs
                     ),
                     IdlOperation(
-                        "testOperation",
-                        type = IdlType.Default("void"),
+                        IdlName("testOperation"),
+                        type = IdlType.Default(IdlName("void")),
                         args = args,
                         isStatic = true,
                         attributes = attrs
                     ),
                     IdlField(
-                        "testField",
-                        type = IdlType.Default("DOMString"),
+                        IdlName("testField"),
+                        type = IdlType.Default(IdlName("DOMString")),
                         value = IdlValue.StringValue("text"),
                         isAttribute = true,
                         isStatic = true,
@@ -83,71 +61,71 @@ class PrinterTest {
                         attributes = attrs
                     ),
                     IdlIterable(
-                        keyType = IdlType.Default("Test")
+                        keyType = IdlType.Default(IdlName("Test"))
                     ),
                     IdlIterable(
-                        keyType = IdlType.Default("Test"),
-                        valueType = IdlType.Default("Test2")
+                        keyType = IdlType.Default(IdlName("Test")),
+                        valueType = IdlType.Default(IdlName("Test2"))
                     ),
                     IdlAsyncIterableLike(
-                        keyType = IdlType.Default("Test")
+                        keyType = IdlType.Default(IdlName("Test"))
                     ),
                     IdlAsyncIterableLike(
-                        keyType = IdlType.Default("Test"),
-                        valueType = IdlType.Default("Test2")
+                        keyType = IdlType.Default(IdlName("Test")),
+                        valueType = IdlType.Default(IdlName("Test2"))
                     ),
                     IdlMapLike(
-                        keyType = IdlType.Default("Test"),
-                        valueType = IdlType.Default("Test2"),
+                        keyType = IdlType.Default(IdlName("Test")),
+                        valueType = IdlType.Default(IdlName("Test2")),
                         isReadOnly = true
                     ),
                     IdlSetLike(
-                        type = IdlType.Default("Test"),
+                        type = IdlType.Default(IdlName("Test")),
                         isReadOnly = true
                     ),
                     IdlStringifier(),
-                    IdlStringifier(IdlField("a", IdlType.Default("DOMString"))),
-                    IdlGetter(IdlOperation("a", IdlType.Default("DOMString"))),
-                    IdlSetter(IdlOperation("a", IdlType.Default("DOMString"))),
+                    IdlStringifier(IdlField(IdlName("a"), IdlType.Default(IdlName("DOMString")))),
+                    IdlGetter(IdlOperation(IdlName("a"), IdlType.Default(IdlName("DOMString")))),
+                    IdlSetter(IdlOperation(IdlName("a"), IdlType.Default(IdlName("DOMString")))),
                 )
             ),
 
             IdlNamespace(
-                name = "TestNamespace",
+                name = IdlName("TestNamespace"),
                 isPartial = true,
                 attributes = attrs,
                 definitions = arrayListOf(
                     IdlOperation(
-                        "testOperation",
-                        type = IdlType.Default("void"),
+                        IdlName("testOperation"),
+                        type = IdlType.Default(IdlName("void")),
                         args = args,
                         attributes = attrs
                     ),
                     IdlField(
-                        "testField",
-                        type = IdlType.Default("DOMString"),
+                        IdlName("testField"),
+                        type = IdlType.Default(IdlName("DOMString")),
                         value = IdlValue.StringValue("text"),
                         attributes = attrs
                     ),
                 )
             ),
 
-            IdlDictionary("B"),
+            IdlDictionary(IdlName("B")),
             IdlDictionary(
-                name = "TestDictionary",
-                implements = "B",
+                name = IdlName("TestDictionary"),
+                implements = IdlName("B"),
                 isPartial = true,
                 attributes = attrs,
                 definitions = arrayListOf(
                     IdlOperation(
-                        "testOperation",
-                        type = IdlType.Default("void"),
+                        IdlName("testOperation"),
+                        type = IdlType.Default(IdlName("void")),
                         args = args,
                         attributes = attrs
                     ),
                     IdlField(
-                        "testField",
-                        type = IdlType.Default("DOMString"),
+                        IdlName("testField"),
+                        type = IdlType.Default(IdlName("DOMString")),
                         value = IdlValue.StringValue("text"),
                         attributes = attrs
                     )
@@ -155,28 +133,28 @@ class PrinterTest {
             ),
 
             IdlCallbackFunction(
-                name = "testCallback",
-                operation = IdlOperation("", IdlType.Default("DOMString")),
+                name = IdlName("testCallback"),
+                operation = IdlOperation(IdlName(""), IdlType.Default(IdlName("DOMString"))),
                 attributes = attrs
             ),
 
             IdlTypeDef(
-                name = "Test",
-                type = IdlType.Default("DOMString"),
+                name = IdlName("Test"),
+                type = IdlType.Default(IdlName("DOMString")),
                 attributes = attrs
             ),
 
             IdlEnum(
-                name = "TestEnum",
+                name = IdlName("TestEnum"),
                 attributes = attrs,
-                definitions = arrayListOf(
-                    IdlEnumElement("first"),
-                    IdlEnumElement("second"),
+                elements = arrayListOf(
+                    IdlEnumElement(IdlName("first")),
+                    IdlEnumElement(IdlName("second")),
                 )
             ),
 
-            IdlIncludes("A", "B"),
-            IdlImplements("A", "B"),
+            IdlIncludes(IdlName("A"), IdlName("B")),
+            IdlImplements(IdlName("A"), IdlName("B")),
         ))
 
         val string = WebIDLPrinter.print(root)

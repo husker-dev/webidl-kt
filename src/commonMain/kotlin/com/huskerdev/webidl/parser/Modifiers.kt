@@ -1,12 +1,12 @@
 package com.huskerdev.webidl.parser
 
-import com.huskerdev.webidl.WebIDLParserException
+import com.huskerdev.webidl.WebIDLSyntaxErrorException
 import com.huskerdev.webidl.lexer.WebIDLLexer
 
 
 internal val modifiers = setOf(
     "partial", "readonly", "attribute",
-    "const", "static", "inherit", "optional"
+    "const", "static", "inherit", "optional", "required"
 )
 
 internal open class Modifiers(
@@ -18,7 +18,7 @@ internal open class Modifiers(
         lexemes.forEach { modifier ->
             val collected = lexemes.filter { it.content == modifier.content }
             if(collected.size > 1)
-                throw WebIDLParserException(collected[1], "Duplicate modifier")
+                throw WebIDLSyntaxErrorException(collected[1], "Duplicate modifier")
         }
     }
 
@@ -26,13 +26,13 @@ internal open class Modifiers(
         val allowed = hashSetOf(*allowed)
         val remain = lexemes.filter { it.content !in allowed }
         if(remain.isNotEmpty())
-            throw WebIDLParserException(remain[0], "Modifier '${remain[0]}' is not allowed here")
+            throw WebIDLSyntaxErrorException(remain[0], "Modifier '${remain[0]}' is not allowed here")
     }
 
     fun get(modifier: String, isAllowed: Boolean = true): Boolean {
         val result = lexemes.firstOrNull { it.content == modifier }
         if(result != null && !isAllowed)
-            throw WebIDLParserException(result, "Modifier '${result.content}' is not allowed here")
+            throw WebIDLSyntaxErrorException(result, "Modifier '${result.content}' is not allowed here")
         return result != null
     }
 }

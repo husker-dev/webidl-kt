@@ -17,14 +17,16 @@ class Namespaces {
             partial namespace SomeNamespace {
                 /* namespace_members... */
             };
-        """.trimIndent()).apply {
-            assertEquals(definitions.size, 2)
+        """.trimIndent()).first.apply {
+            assertEquals(2, this.definitions.size)
 
-            assertNamespace(definitions[0],
+            assertNamespace(
+                this.definitions[0],
                 name = "SomeNamespace",
                 definitions = 0
             )
-            assertNamespace(definitions[1],
+            assertNamespace(
+                this.definitions[1],
                 name = "SomeNamespace",
                 definitions = 0,
                 isPartial = true
@@ -43,15 +45,17 @@ class Namespaces {
                 double dotProduct(Vector x, Vector y);
                 Vector crossProduct(Vector x, Vector y);
             };
-        """.trimIndent()).apply {
-            assertEquals(definitions.size, 2)
+        """.trimIndent()).first.apply {
+            assertEquals(2, this.definitions.size)
 
-            assertInterface(definitions[0],
+            assertInterface(
+                this.definitions[0],
                 name = "Vector",
                 implements = null,
                 definitions = 0
             )
-            assertNamespace(definitions[1],
+            assertNamespace(
+                this.definitions[1],
                 name = "VectorUtils",
                 definitions = 3
             ) {

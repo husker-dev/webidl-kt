@@ -1,13 +1,15 @@
 package com.huskerdev.webidl.lexer
 
+import com.huskerdev.webidl.IdlElementBounds
 import com.huskerdev.webidl.WebIDLEnv
-import com.huskerdev.webidl.WebIDLParserException
+import com.huskerdev.webidl.WebIDLSyntaxErrorException
 
 class WebIDLLexer(
     val chars: Iterator<Char>,
-    types: Set<String> = WebIDLEnv.Default.builtinTypes.keys
+    types: Set<String> = WebIDLEnv.Default.builtinTypes.keys,
+    private val keywords: Set<String> = WebIDLLexer.keywords,
+    val includeSkipped: Boolean = false
 ): Iterator<WebIDLLexer.Lexeme> {
-
     companion object {
         private val spaces = setOf(' ', '\t', '\n', '\r')
 
@@ -50,186 +52,282 @@ class WebIDLLexer(
         EQUALS("="),
         QUESTION("?"),
         ELLIPSIS("..."),
-        WILDCARD("*")
+        WILDCARD("*"),
+
+        WHITE_SPACE(" "),
+        LINE_COMMENT("//"),
+        BLOCK_COMMENT("/*"),
+        UNKNOWN("unknown"),
+        END("EOF")
     }
 
     data class Lexeme(
         val content: String,
         val type: LexemeType,
-        val line: String,
-        val lineIndex: Int,
-        val lineCharIndex: Int
+        val bounds: IdlElementBounds
     )
+
+    private val collectedErrors = arrayListOf<WebIDLSyntaxErrorException>()
+    val errors: List<WebIDLSyntaxErrorException> = collectedErrors
 
     val types = types.flatMap { it.split(" ") }.toSet()
 
-    private var hasNext = chars.hasNext()
-    private var char = if(hasNext) chars.next() else '\n'
-
-    private val cachedLine = StringBuilder().append(char)
+    private var front: Char? = null
+    private var rear: Char? = null
+    private var fetchedAll = false
+    private var frontOffset = 0
     private var lineIndex = 0
+    private var lineStartOffset = 0
+
+    private var pending: Lexeme? = null
 
     lateinit var current: Lexeme
         private set
 
     init {
-        if(hasNext) {
-            skipComments()
-            skipSpaces()
-            next()
-        }
+        pending = readLexeme()
+        streamNext()
     }
 
-    private fun throwException(message: String): Nothing =
-        throw WebIDLParserException(lineIndex, cachedLine, cachedLine.length, message)
+    override fun hasNext(): Boolean = pending != null
 
-    private fun nextChar(
-        ignoreComment: Boolean = false
-    ): Char {
-        if(char == ';' || char == '\n')
-            cachedLine.clear()
-        if(char == '\n')
+    override fun next(): Lexeme = streamNext()
+
+    private fun streamNext(): Lexeme {
+        val token = pending ?: endLexeme()
+        current = token
+        pending = readLexeme()
+        return token
+    }
+
+    private fun pullChar(): Char? =
+        if (chars.hasNext()) chars.next() else {
+            fetchedAll = true
+            null
+        }
+
+    private fun ensureFront() {
+        if (front == null && !fetchedAll) front = pullChar()
+    }
+
+    private fun peek(): Char? {
+        ensureFront()
+        return front
+    }
+
+    private fun ahead(): Char? {
+        ensureFront()
+        if (rear == null && !fetchedAll) rear = pullChar()
+        return rear
+    }
+
+    private fun read(): Char? {
+        ensureFront()
+        if (front == null) return null
+        val c = front
+        front = rear
+        rear = null
+        if (c == '\n') {
             lineIndex++
-
-        if(!chars.hasNext()) {
-            char = '\n'
-            hasNext = false
-            return '\n'
+            lineStartOffset = frontOffset + 1
         }
-        char = chars.next()
-        cachedLine.append(char)
-
-        if(!ignoreComment)
-            skipComments()
-        return char
+        frontOffset++
+        return c
     }
 
-    @Suppress("UnusedExpression")
-    private fun skipComments(){
-        while(char == '/') {
-            nextChar(true)
-            when (char) {
-                '/' -> while(char != '\n')
-                    nextChar(true)
-                '*' -> while(
-                    nextChar(true) != '*' ||
-                    nextChar(true) != '/'
-                ) Unit
+    private inline fun readWhile(builder: StringBuilder, predicate: (Char) -> Boolean) {
+        while (true) {
+            val c = peek() ?: break
+            if (!predicate(c)) break
+            builder.append(read())
+        }
+    }
+
+    private fun endLexeme(): Lexeme = Lexeme(
+        content = "EOF",
+        type = LexemeType.END,
+        bounds = IdlElementBounds(frontOffset, frontOffset, 0, 0, )
+    )
+
+    private fun readLexeme(): Lexeme? {
+        val builder = StringBuilder()
+        while (true) {
+            val start = frontOffset
+            val startLineIndex = lineIndex
+            val startLineCharIndex = start - lineStartOffset
+            builder.setLength(0)
+            val type = scanTrivia(builder) ?: break
+            if (includeSkipped) {
+                return makeLexeme(
+                    start, frontOffset, type, builder.toString(),
+                    startLineIndex, startLineCharIndex
+                )
             }
-            cachedLine.clear()
-            nextChar(true)
+        }
+        return if (peek() == null) null else readToken()
+    }
+
+    private fun scanTrivia(builder: StringBuilder): LexemeType? {
+        val c = peek() ?: return null
+        return when (c) {
+            in spaces -> {
+                readWhile(builder) { it in spaces }
+                LexemeType.WHITE_SPACE
+            }
+            '/' -> when (ahead()) {
+                '/' -> {
+                    builder.append(read())
+                    readWhile(builder) { it != '\n' }
+                    LexemeType.LINE_COMMENT
+                }
+
+                '*' -> {
+                    builder.append(read())
+                    builder.append(read())
+                    while (true) {
+                        val ch = peek() ?: break
+                        if (ch == '*' && ahead() == '/') {
+                            builder.append(read())
+                            builder.append(read())
+                            break
+                        }
+                        builder.append(read())
+                    }
+                    LexemeType.BLOCK_COMMENT
+                }
+
+                else -> null
+            }
+            else -> null
         }
     }
 
-    private fun skipSpaces(){
-        while(hasNext && char in spaces)
-            nextChar()
+    private fun readToken(): Lexeme {
+        val start = frontOffset
+        val startLineIndex = lineIndex
+        val startLineCharIndex = start - lineStartOffset
+        val builder = StringBuilder()
+        val firstChar = read()!!
+        builder.append(firstChar)
+
+        val type = try {
+            when (firstChar) {
+
+                in digits, '-', '.' -> {
+                    if (firstChar == '.' && (peek() ?: '.') !in digits) {
+                        val d2 = read()
+                        if (peek() != '.') throw newException("Expected '...'.")
+                        val d3 = read()
+                        builder.append(d2).append(d3)
+                        LexemeType.ELLIPSIS
+                    } else {
+                        readWhile(builder) { it == '.' || it !in splitters }
+                        if ('.' in builder || builder.contentEquals("-Infinity"))
+                            LexemeType.DECIMAL
+                        else
+                            LexemeType.INTEGER
+                    }
+                }
+
+                !in splitters -> {
+                    readWhile(builder) { it !in splitters }
+                    when (builder.toString()) {
+                        in keywords -> LexemeType.KEYWORD
+                        in types -> LexemeType.TYPE
+                        "true" -> LexemeType.TRUE
+                        "false" -> LexemeType.FALSE
+                        "null" -> LexemeType.NULL
+                        "Infinity" -> LexemeType.DECIMAL
+                        "NaN" -> LexemeType.DECIMAL
+                        else -> LexemeType.IDENTIFIER
+                    }
+                }
+
+                in splitters -> when (firstChar) {
+                    '<' -> LexemeType.L_ANGLE_BRACKET
+                    '>' -> LexemeType.R_ANGLE_BRACKET
+                    '(' -> LexemeType.L_ROUND_BRACKET
+                    ')' -> LexemeType.R_ROUND_BRACKET
+                    '{' -> LexemeType.L_CURLY_BRACKET
+                    '}' -> LexemeType.R_CURLY_BRACKET
+                    '[' -> LexemeType.L_SQUARE_BRACKET
+                    ']' -> LexemeType.R_SQUARE_BRACKET
+                    ',' -> LexemeType.COMMA
+                    ';' -> LexemeType.SEMICOLON
+                    ':' -> LexemeType.COLON
+                    '=' -> LexemeType.EQUALS
+                    '?' -> LexemeType.QUESTION
+                    '*' -> LexemeType.WILDCARD
+                    '\"' -> {
+                        readString(builder)
+                        LexemeType.STRING
+                    }
+                    else -> throw Exception() // Never throws
+                }
+                else -> throw newException("Unexpected token.")
+            }
+        } catch (e: WebIDLSyntaxErrorException) {
+            collectedErrors += e
+            LexemeType.UNKNOWN
+        }
+
+        return makeLexeme(
+            start, frontOffset, type, builder.toString(),
+            startLineIndex, startLineCharIndex
+        )
     }
 
-    private fun readString(builder: StringBuilder){
+    private fun readString(builder: StringBuilder) {
         builder.clear()
-        while (char != '\"' || builder.lastOrNull() == '\\') {
-            builder.append(char)
-            nextChar()
-
-            // Check escape sequence
-            while(char == '\\') {
-                nextChar()
-                builder.append(when(char) {
+        while (true) {
+            val c = peek() ?: break
+            if (c == '\"' && builder.isNotEmpty() && builder.last() != '\\') break
+            builder.append(read())
+            while (true) {
+                val b = peek()
+                if (b == null || b != '\\') break
+                read()
+                val escaped = peek() ?: break
+                builder.append(when (escaped) {
                     'n' -> '\n'
-                    '\"' -> '"'
+                    '\"' -> '\"'
                     '\\' -> '\\'
                     'r' -> '\r'
                     't' -> '\t'
                     'b' -> '\b'
-                    else -> throwException("Unsupported escape sequence")
+                    else -> collectedErrors += newException("Unsupported escape sequence.")
                 })
-                nextChar()
+                read()
             }
         }
-        nextChar()
+        if (peek() == '\"') read()
     }
 
-    override fun hasNext(): Boolean = hasNext
+    private fun makeLexeme(
+        start: Int,
+        end: Int,
+        type: LexemeType,
+        content: String,
+        startLineIndex: Int,
+        startLineCharIndex: Int
+    ): Lexeme = Lexeme(
+        content,
+        type,
+        bounds = IdlElementBounds(
+            startOffset = start,
+            endOffset = end,
+            lineIndex = startLineIndex,
+            lineCharIndex = startLineCharIndex
+        )
+    )
 
-    override fun next(): Lexeme {
-        val firstCharIndex = cachedLine.length-1
-        val firstChar = char
-        nextChar()
-
-        val builder = StringBuilder()
-        builder.append(firstChar)
-
-        val type = when (firstChar) {
-
-            // Numbers (except 'Infinity' and 'NaN', but with '-Infinity')
-            // Also contains ellipsis
-            in digits, '-', '.' -> {
-                if(firstChar == '.' && char !in digits) {
-                    // Ellipsis '...'
-                    if(char != '.' || nextChar() != '.')
-                        throwException("Expected '...'")
-                    nextChar()
-                    builder.append("..")
-                    LexemeType.ELLIPSIS
-                } else {
-                    // Number
-                    while (char == '.' || char !in splitters) {
-                        builder.append(char)
-                        nextChar()
-                    }
-                    if ('.' in builder || builder.contentEquals("-Infinity"))
-                        LexemeType.DECIMAL
-                    else
-                        LexemeType.INTEGER
-                }
-            }
-
-            // Long words
-            !in splitters -> {
-                while (char !in splitters) {
-                    builder.append(char)
-                    nextChar()
-                }
-                when (builder.toString()) {
-                    in keywords -> LexemeType.KEYWORD
-                    in types -> LexemeType.TYPE
-                    "true" -> LexemeType.TRUE
-                    "false" -> LexemeType.FALSE
-                    "null" -> LexemeType.NULL
-                    "Infinity" -> LexemeType.DECIMAL
-                    "NaN" -> LexemeType.DECIMAL
-                    else -> LexemeType.IDENTIFIER
-                }
-            }
-
-            // Single-letter
-            in splitters -> when (firstChar) {
-                '<' -> LexemeType.L_ANGLE_BRACKET
-                '>' -> LexemeType.R_ANGLE_BRACKET
-                '(' -> LexemeType.L_ROUND_BRACKET
-                ')' -> LexemeType.R_ROUND_BRACKET
-                '{' -> LexemeType.L_CURLY_BRACKET
-                '}' -> LexemeType.R_CURLY_BRACKET
-                '[' -> LexemeType.L_SQUARE_BRACKET
-                ']' -> LexemeType.R_SQUARE_BRACKET
-                ',' -> LexemeType.COMMA
-                ';' -> LexemeType.SEMICOLON
-                ':' -> LexemeType.COLON
-                '=' -> LexemeType.EQUALS
-                '?' -> LexemeType.QUESTION
-                '*' -> LexemeType.WILDCARD
-                '\"' -> {
-                    readString(builder)
-                    LexemeType.STRING
-                }
-                else -> throwException("Unexpected char")
-            }
-            else -> throwException("Unexpected token")
-        }
-        skipSpaces()
-
-        current = Lexeme(builder.toString(), type, cachedLine.toString(), lineIndex, firstCharIndex)
-        return current
-    }
+    private fun newException(message: String) = WebIDLSyntaxErrorException(
+        bounds = IdlElementBounds(
+            startOffset = frontOffset,
+            endOffset = frontOffset + 1,
+            lineIndex = lineIndex,
+            lineCharIndex = (frontOffset - lineStartOffset).coerceAtLeast(0)
+        ),
+        errorMessage = message
+    )
 }

@@ -21,28 +21,30 @@ class Interfaces {
                 undefined f();
                 undefined g(DOMString x);
             };
-        """.trimIndent()).apply {
-            assertEquals(definitions.size, 2)
+        """.trimIndent()).first.apply {
+            assertEquals(2, this.definitions.size)
 
-            assertInterface(definitions[0],
+            assertInterface(
+                this.definitions[0],
                 name = "A",
                 implements = null,
                 definitions = 2,
                 attributes = 1
             ) {
-                assertAttributeIdent(attributes[0], "Exposed", "Window")
-                assertOperation(definitions[0], "f", "undefined", argsCount = 0)
-                assertOperation(definitions[1], "g", "undefined", argsCount = 0)
+                assertAttributeIdent(attributes!![0], "Exposed", "Window")
+                assertOperation(this.definitions[0], "f", "undefined", argsCount = 0)
+                assertOperation(this.definitions[1], "g", "undefined", argsCount = 0)
             }
-            assertInterface(definitions[1],
+            assertInterface(
+                this.definitions[1],
                 name = "B",
                 implements = "A",
                 definitions = 2,
                 attributes = 1
             ) {
-                assertAttributeIdent(attributes[0], "Exposed", "Window")
-                assertOperation(definitions[0], "f", "undefined", argsCount = 0)
-                assertOperation(definitions[1], "g", "undefined", argsCount = 1) {
+                assertAttributeIdent(attributes!![0], "Exposed", "Window")
+                assertOperation(this.definitions[0], "f", "undefined", argsCount = 0)
+                assertOperation(this.definitions[1], "g", "undefined", argsCount = 1) {
                     assertField(args[0], "x", "DOMString")
                 }
             }
@@ -64,25 +66,26 @@ class Interfaces {
                 [extended_attributes]
                 long identifier(/* arguments... */);
             };
-        """.trimIndent()).apply {
-            assertEquals(definitions.size, 1)
+        """.trimIndent()).first.apply {
+            assertEquals(1, this.definitions.size)
 
-            assertInterface(definitions[0],
+            assertInterface(
+                this.definitions[0],
                 name = "identifier",
                 implements = null,
                 definitions = 3,
                 attributes = 1
             ) {
-                assertAttribute(attributes[0], "extended_attributes")
+                assertAttribute(attributes!![0], "extended_attributes")
 
-                assertField(definitions[0], "constant_identifier", "long", value = "42", attributes = 1, isConst = true) {
-                    assertAttribute(attributes[0], "extended_attributes")
+                assertField(this.definitions[0], "constant_identifier", "long", value = "42", attributes = 1, isConst = true) {
+                    assertAttribute(attributes!![0], "extended_attributes")
                 }
-                assertField(definitions[1], "identifier", "long", attributes = 1, isAttribute = true) {
-                    assertAttribute(attributes[0], "extended_attributes")
+                assertField(this.definitions[1], "identifier", "long", attributes = 1, isAttribute = true) {
+                    assertAttribute(attributes!![0], "extended_attributes")
                 }
-                assertOperation(definitions[2], "identifier", "long", argsCount = 0, attributes = 1) {
-                    assertAttribute(attributes[0], "extended_attributes")
+                assertOperation(this.definitions[2], "identifier", "long", argsCount = 0, attributes = 1) {
+                    assertAttribute(attributes!![0], "extended_attributes")
                 }
             }
         }
@@ -98,14 +101,16 @@ class Interfaces {
             partial interface SomeInterface {
                 /* interface_members... */
             };
-        """.trimIndent()).apply {
-            assertEquals(2, definitions.size)
-            assertInterface(definitions[0],
+        """.trimIndent()).first.apply {
+            assertEquals(2, this.definitions.size)
+            assertInterface(
+                this.definitions[0],
                 name = "SomeInterface",
                 implements = null,
                 definitions = 0
             )
-            assertInterface(definitions[1],
+            assertInterface(
+                this.definitions[1],
                 name = "SomeInterface",
                 implements = null,
                 definitions = 0,
@@ -131,35 +136,38 @@ class Interfaces {
             interface Dog : Animal {
                 attribute Human? owner;
             };
-        """.trimIndent()).apply {
-            assertEquals(3, definitions.size)
+        """.trimIndent()).first.apply {
+            assertEquals(3, this.definitions.size)
 
-            assertInterface(definitions[0],
+            assertInterface(
+                this.definitions[0],
                 name = "Animal",
                 implements = null,
                 definitions = 1,
                 attributes = 1
             ) {
-                assertAttributeIdent(attributes[0], "Exposed", "Window")
-                assertField(definitions[0], "name", "DOMString", isAttribute = true)
+                assertAttributeIdent(attributes!![0], "Exposed", "Window")
+                assertField(this.definitions[0], "name", "DOMString", isAttribute = true)
             }
-            assertInterface(definitions[1],
+            assertInterface(
+                this.definitions[1],
                 name = "Human",
                 implements = "Animal",
                 definitions = 1,
                 attributes = 1
             ) {
-                assertAttributeIdent(attributes[0], "Exposed", "Window")
-                assertField(definitions[0], "pet", "Dog?", isAttribute = true)
+                assertAttributeIdent(attributes!![0], "Exposed", "Window")
+                assertField(this.definitions[0], "pet", "Dog?", isAttribute = true)
             }
-            assertInterface(definitions[2],
+            assertInterface(
+                this.definitions[2],
                 name = "Dog",
                 implements = "Animal",
                 definitions = 1,
                 attributes = 1
             ) {
-                assertAttributeIdent(attributes[0], "Exposed", "Window")
-                assertField(definitions[0], "owner", "Human?", isAttribute = true)
+                assertAttributeIdent(attributes!![0], "Exposed", "Window")
+                assertField(this.definitions[0], "owner", "Human?", isAttribute = true)
             }
         }
     }
@@ -178,33 +186,35 @@ class Interfaces {
             callback interface EventListener {
                 undefined handleEvent(Event event);
             };
-        """.trimIndent()).apply {
-            assertEquals(2, definitions.size)
+        """.trimIndent()).first.apply {
+            assertEquals(2, this.definitions.size)
 
-            assertInterface(definitions[0],
+            assertInterface(
+                this.definitions[0],
                 name = "Node",
                 implements = null,
                 definitions = 4,
                 attributes = 1
             ) {
-                assertAttributeIdent(attributes[0], "Exposed", "Window")
-                assertField(definitions[0], "nodeName", "DOMString", isAttribute = true, isReadOnly = true)
-                assertField(definitions[1], "parentNode", "Node?", isAttribute = true, isReadOnly = true)
-                assertOperation(definitions[2], "appendChild", "Node", argsCount = 1) {
+                assertAttributeIdent(attributes!![0], "Exposed", "Window")
+                assertField(this.definitions[0], "nodeName", "DOMString", isAttribute = true, isReadOnly = true)
+                assertField(this.definitions[1], "parentNode", "Node?", isAttribute = true, isReadOnly = true)
+                assertOperation(this.definitions[2], "appendChild", "Node", argsCount = 1) {
                     assertField(args[0], "newChild", "Node")
                 }
-                assertOperation(definitions[3], "addEventListener", "undefined", argsCount = 2) {
+                assertOperation(this.definitions[3], "addEventListener", "undefined", argsCount = 2) {
                     assertField(args[0], "type", "DOMString")
                     assertField(args[1], "listener", "EventListener")
                 }
             }
-            assertInterface(definitions[1],
+            assertInterface(
+                this.definitions[1],
                 name = "EventListener",
                 implements = null,
                 definitions = 1,
                 isCallback = true
             ) {
-                assertOperation(definitions[0], "handleEvent", "undefined", argsCount = 1) {
+                assertOperation(this.definitions[0], "handleEvent", "undefined", argsCount = 1) {
                     assertField(args[0], "event", "Event")
                 }
             }

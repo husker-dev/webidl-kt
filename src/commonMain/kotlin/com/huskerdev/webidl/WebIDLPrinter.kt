@@ -12,8 +12,8 @@ object WebIDLPrinter {
     ): IntentStringBuilder {
         definition.apply {
             when (this) {
-                is IdlDefinitionRoot -> {
-                    definitions.forEachIndexed { index, definition ->
+                is IdlRoot -> {
+                    this.definitions.forEachIndexed { index, definition ->
                         if(index != 0)
                             builder.append("\n\n")
                         print(builder, definition)
@@ -27,9 +27,9 @@ object WebIDLPrinter {
                     if (isCallback) builder.append("callback ")
                     builder.append("interface ")
                     if (isMixin) builder.append("mixin ")
-                    builder.append(name)
+                    builder.append(name.text)
                     if (implements != null)
-                        builder.append(": ").append(implements)
+                        builder.append(": ").append(implements.text)
                     builder.append(" {")
 
                     val tabbed = builder.tab()
@@ -44,7 +44,7 @@ object WebIDLPrinter {
                 is IdlNamespace -> {
                     printAttributes(builder, attributes)
                     if (isPartial) builder.append("partial ")
-                    builder.append("namespace ").append(name).append(" {")
+                    builder.append("namespace ").append(name.text).append(" {")
 
                     val tabbed = builder.tab()
                     definitions.forEach { definition ->
@@ -59,8 +59,8 @@ object WebIDLPrinter {
                     printAttributes(builder, attributes)
                     if (isPartial) builder.append("partial ")
                     builder.append("dictionary ")
-                    builder.append(name)
-                    if (implements != null) builder.append(": ").append(implements)
+                    builder.append(name.text)
+                    if (implements != null) builder.append(": ").append(implements.text)
                     builder.append(" {")
 
                     val tabbed = builder.tab()
@@ -74,7 +74,7 @@ object WebIDLPrinter {
 
                 is IdlCallbackFunction -> {
                     printAttributes(builder, attributes)
-                    builder.append("callback ").append(name).append(" = ")
+                    builder.append("callback ").append(name.text).append(" = ")
                     print(builder, operation)
                 }
 
@@ -82,31 +82,31 @@ object WebIDLPrinter {
                     printAttributes(builder, attributes)
                     builder.append("typedef ")
                     printType(builder, type)
-                    builder.append(' ').append(name)
+                    builder.append(' ').append(name.text)
                 }
 
                 is IdlEnum -> {
                     printAttributes(builder, attributes)
-                    builder.append("enum ").append(name).append(" {")
+                    builder.append("enum ").append(name.text).append(" {")
 
                     val tabbed = builder.tab()
-                    definitions.forEachIndexed { index, element ->
+                    elements.forEachIndexed { index, element ->
                         tabbed.append("\n")
                         print(tabbed, element)
-                        if (index != definitions.lastIndex)
+                        if (index != elements.lastIndex)
                             builder.append(',')
                     }
                     builder.append("\n}")
                 }
 
                 is IdlEnumElement ->
-                    builder.append('\"').append(name).append('\"')
+                    builder.append('\"').append(name.text).append('\"')
 
                 is IdlIncludes ->
-                    builder.append(target).append(" includes ").append(source)
+                    builder.append(target.text).append(" includes ").append(source.text)
 
                 is IdlImplements ->
-                    builder.append(target).append(" implements ").append(source)
+                    builder.append(target.text).append(" implements ").append(source.text)
 
                 is IdlConstructor -> {
                     printAttributes(builder, attributes)
@@ -123,8 +123,8 @@ object WebIDLPrinter {
                     printAttributes(builder, attributes)
                     if(isStatic) builder.append("static ")
                     printType(builder, type)
-                    if(name.isNotEmpty())
-                        builder.append(' ').append(name)
+                    if(name.text.isNotEmpty())
+                        builder.append(' ').append(name.text)
                     builder.append('(')
                     args.forEachIndexed { index, def ->
                         print(builder, def, true)
@@ -146,7 +146,7 @@ object WebIDLPrinter {
                     printType(builder, type)
                     if (isVariadic)
                         builder.append("...")
-                    builder.append(' ').append(name)
+                    builder.append(' ').append(name.text)
                     if (value != null) {
                         builder.append(" = ")
                         printValue(builder, value)
@@ -210,11 +210,11 @@ object WebIDLPrinter {
                 }
 
                 is IdlExtendedAttribute.NoArgs -> {
-                    builder.append(name)
+                    builder.append(name.text)
                 }
 
                 is IdlExtendedAttribute.ArgList -> {
-                    builder.append(name).append('(')
+                    builder.append(name.text).append('(')
                     args.forEachIndexed { index, def ->
                         print(builder, def)
                         if (index != args.lastIndex)
@@ -224,8 +224,8 @@ object WebIDLPrinter {
                 }
 
                 is IdlExtendedAttribute.NamedArgList -> {
-                    builder.append(name).append('=')
-                    builder.append(identifier).append('(')
+                    builder.append(name.text).append('=')
+                    builder.append(identifier.text).append('(')
                     args.forEachIndexed { index, def ->
                         print(builder, def)
                         if (index != args.lastIndex)
@@ -235,31 +235,35 @@ object WebIDLPrinter {
                 }
 
                 is IdlExtendedAttribute.IdentifierValue ->
-                    builder.append(name).append('=').append(identifier)
+                    builder.append(name.text).append('=').append(identifier.text)
 
                 is IdlExtendedAttribute.StringValue ->
-                    builder.append(name).append('=').append(value)
+                    builder.append(name.text).append('=').append(value)
 
                 is IdlExtendedAttribute.IntegerValue ->
-                    builder.append(name).append('=').append(value.toString())
+                    builder.append(name.text).append('=').append(value.toString())
 
                 is IdlExtendedAttribute.DecimalValue ->
-                    builder.append(name).append('=').append(value.toString())
+                    builder.append(name.text).append('=').append(value.toString())
 
                 is IdlExtendedAttribute.IntegerList -> {
-                    builder.append(name).append("=(")
+                    builder.append(name.text).append("=(")
                     array.joinTo(builder, prefix = "(", separator = ",", postfix = ")")
                 }
 
                 is IdlExtendedAttribute.IdentifierList -> {
-                    builder.append(name).append('=')
-                    array.joinTo(builder, prefix = "(", separator = ",", postfix = ")")
+                    builder.append(name.text).append('=')
+                    identifiers.joinTo(builder, prefix = "(", separator = ",", postfix = ")") { it.text }
                 }
 
                 is IdlExtendedAttribute.Wildcard ->
-                    builder.append(name).append("=*")
+                    builder.append(name.text).append("=*")
 
-                else -> throw UnsupportedOperationException()
+                is IdlName,
+                is IdlAttributes,
+                is IdlAttributeHolder,
+                is IdlType.Default,
+                is IdlType.Union -> Unit
             }
         }
         return builder
@@ -280,7 +284,7 @@ object WebIDLPrinter {
         val nullableChar = if(type.isNullable) "?" else ""
         when(type) {
             is IdlType.Default -> {
-                builder.append(type.name)
+                builder.append(type.name.text)
                 if(type.parameters.isNotEmpty()) {
                     builder.append("<")
                     type.parameters.forEachIndexed { index, it ->
@@ -329,22 +333,22 @@ object WebIDLPrinter {
                 builder.append(')')
             }
 
-            is ResolvedIdlType.Void -> type.name
+            is ResolvedIdlType.Void -> builder.append(type.name)
         }
         builder.append(nullableChar)
     }
 
     private fun printAttributes(
         builder: IntentStringBuilder,
-        attributes: List<IdlExtendedAttribute>,
+        attributes: IdlAttributes?,
         newLine: Boolean = true,
     ) {
-        if (attributes.isEmpty())
+        if (attributes == null)
             return
         builder.append("[")
-        attributes.forEachIndexed { index, def ->
+        attributes.list.forEachIndexed { index, def ->
             print(builder, def)
-            if (index != attributes.lastIndex)
+            if (index != attributes.list.lastIndex)
                 builder.append(", ")
         }
         builder.append("]")
@@ -375,7 +379,7 @@ object WebIDLPrinter {
 
     @Suppress("unused")
     fun printAttributes(
-        attributes: List<IdlExtendedAttribute>,
+        attributes: IdlAttributes?,
         newLine: Boolean = true,
     ) = IntentStringBuilder().apply {
         printAttributes(this, attributes, newLine)

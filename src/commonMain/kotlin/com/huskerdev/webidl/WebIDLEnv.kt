@@ -4,8 +4,9 @@ import com.huskerdev.webidl.resolver.WebIDLBuiltinKind
 
 @Suppress("unused")
 interface WebIDLEnv {
-
     val builtinTypes: Map<String, WebIDLBuiltinKind>
+
+    val overloadingSupport: Boolean
 
     object Default: WebIDLEnv {
         override val builtinTypes = mapOf(
@@ -36,31 +37,7 @@ interface WebIDLEnv {
             "object"               to WebIDLBuiltinKind.OBJECT,
             "symbol"               to WebIDLBuiltinKind.CHAR,
         )
-    }
-
-    object UniFFI: WebIDLEnv {
-        override val builtinTypes = mapOf(
-            "sequence"             to WebIDLBuiltinKind.MUTABLE_LIST,
-            "record"               to WebIDLBuiltinKind.MAP,
-            "boolean"              to WebIDLBuiltinKind.BOOLEAN,
-            "i8"                   to WebIDLBuiltinKind.BYTE,
-            "u8"                   to WebIDLBuiltinKind.UNSIGNED_BYTE,
-            "i16"                  to WebIDLBuiltinKind.SHORT,
-            "u16"                  to WebIDLBuiltinKind.UNSIGNED_SHORT,
-            "i32"                  to WebIDLBuiltinKind.INT,
-            "u32"                  to WebIDLBuiltinKind.UNSIGNED_INT,
-            "i64"                  to WebIDLBuiltinKind.LONG,
-            "u64"                  to WebIDLBuiltinKind.UNSIGNED_LONG,
-            "f32"                  to WebIDLBuiltinKind.UNRESTRICTED_FLOAT,
-            "float"                to WebIDLBuiltinKind.UNRESTRICTED_FLOAT,
-            "f64"                  to WebIDLBuiltinKind.UNRESTRICTED_DOUBLE,
-            "double"               to WebIDLBuiltinKind.UNRESTRICTED_DOUBLE,
-            "string"               to WebIDLBuiltinKind.STRING,
-            "bytes"                to WebIDLBuiltinKind.BYTE_SEQUENCE,
-            "timestamp"            to WebIDLBuiltinKind.LONG,
-            "duration"             to WebIDLBuiltinKind.LONG,
-            "void"                 to WebIDLBuiltinKind.VOID,
-        )
+        override val overloadingSupport: Boolean = true
     }
 }
 

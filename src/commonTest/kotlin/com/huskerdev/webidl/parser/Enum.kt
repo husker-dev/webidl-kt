@@ -11,10 +11,11 @@ class Enum {
     fun test1(){
         WebIDL.parseDefinitions("""
             enum identifier { "enum", "values" /* , ... */ };
-        """.trimIndent()).apply {
-            assertEquals(definitions.size, 1)
+        """.trimIndent()).first.apply {
+            assertEquals(1, this.definitions.size)
 
-            assertEnum(definitions[0],
+            assertEnum(
+                this.definitions[0],
                 name = "identifier",
                 elements = listOf("enum", "values")
             )
@@ -33,24 +34,26 @@ class Enum {
             
                 undefined initialize(MealType type, double size);
             };
-        """.trimIndent()).apply {
-            assertEquals(definitions.size, 2)
+        """.trimIndent()).first.apply {
+            assertEquals(2, this.definitions.size)
 
-            assertEnum(definitions[0],
+            assertEnum(
+                this.definitions[0],
                 name = "MealType",
                 elements = listOf("rice", "noodles", "other")
             )
-            assertInterface(definitions[1],
+            assertInterface(
+                this.definitions[1],
                 name = "Meal",
                 implements = null,
                 definitions = 3,
                 attributes = 1
             ) {
-                assertAttributeIdent(attributes[0], "Exposed", "Window")
+                assertAttributeIdent(attributes!![0], "Exposed", "Window")
 
-                assertField(definitions[0], "type", "MealType", isAttribute = true)
-                assertField(definitions[1], "size", "double", isAttribute = true)
-                assertOperation(definitions[2], "initialize", "undefined", argsCount = 2) {
+                assertField(this.definitions[0], "type", "MealType", isAttribute = true)
+                assertField(this.definitions[1], "size", "double", isAttribute = true)
+                assertOperation(this.definitions[2], "initialize", "undefined", argsCount = 2) {
                     assertField(args[0], "type", "MealType")
                     assertField(args[1], "size", "double")
                 }

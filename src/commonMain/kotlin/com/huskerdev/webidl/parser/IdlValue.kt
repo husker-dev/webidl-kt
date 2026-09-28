@@ -1,30 +1,39 @@
 package com.huskerdev.webidl.parser
 
+import com.huskerdev.webidl.IdlElementBounds
 import kotlinx.serialization.Serializable
-import kotlin.jvm.JvmInline
 
 
 @Serializable
 sealed interface IdlValue {
+    val bounds: IdlElementBounds
 
     @Serializable
-    object NullValue: IdlValue
+    object NullValue: IdlValue {
+        override val bounds = IdlElementBounds()
+    }
 
     @Serializable
-    object DictionaryInitValue: IdlValue
+    object DictionaryInitValue: IdlValue {
+        override val bounds = IdlElementBounds()
+    }
 
-    @JvmInline
     @Serializable
-    value class StringValue(val text: String): IdlValue
-
-    @JvmInline
-    @Serializable
-    value class BooleanValue(val boolValue: Boolean): IdlValue
-
-    @JvmInline
-    @Serializable
-    value class IntValue(
+    class StringValue(
         val text: String,
+        override val bounds: IdlElementBounds = IdlElementBounds()
+    ): IdlValue
+
+    @Serializable
+    class BooleanValue(
+        val boolValue: Boolean,
+        override val bounds: IdlElementBounds = IdlElementBounds()
+    ): IdlValue
+
+    @Serializable
+    class IntValue(
+        val text: String,
+        override val bounds: IdlElementBounds = IdlElementBounds()
     ): IdlValue {
         val number: Int get() = when {
             "0x" in text.lowercase() -> text.drop(2).toInt(16)
@@ -34,10 +43,10 @@ sealed interface IdlValue {
         }
     }
 
-    @JvmInline
     @Serializable
-    value class DecimalValue(
-        val text: String
+    class DecimalValue(
+        val text: String,
+        override val bounds: IdlElementBounds = IdlElementBounds()
     ): IdlValue {
         val number: Double get() = text.toDouble()
     }

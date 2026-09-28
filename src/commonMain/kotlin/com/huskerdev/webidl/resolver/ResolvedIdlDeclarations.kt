@@ -1,14 +1,16 @@
 package com.huskerdev.webidl.resolver
 
-import com.huskerdev.webidl.parser.IdlAttributedHolder
-import com.huskerdev.webidl.parser.IdlExtendedAttribute
+import com.huskerdev.webidl.IdlElementBounds
+import com.huskerdev.webidl.parser.IdlAttributeHolder
+import com.huskerdev.webidl.parser.IdlAttributes
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed interface ResolvedIdlDeclaration: IdlAttributedHolder {
+sealed interface ResolvedIdlDeclaration: IdlAttributeHolder {
     val name: String
     val isNullable: Boolean
+    val bounds: IdlElementBounds
 }
 
 @Serializable
@@ -16,7 +18,8 @@ class BuiltinIdlDeclaration(
     override val name: String,
     val kind: WebIDLBuiltinKind
 ): ResolvedIdlDeclaration {
-    override val attributes: List<IdlExtendedAttribute> = emptyList()
+    override val bounds: IdlElementBounds = IdlElementBounds()
+    override val attributes: IdlAttributes? = null
 
     override val isNullable = kind.nullable
 }
@@ -25,7 +28,8 @@ class BuiltinIdlDeclaration(
 class ResolvedIdlInterface(
     override val name: String,
     val isCallback: Boolean = false,
-    override val attributes: List<IdlExtendedAttribute> = emptyList(),
+    override val attributes: IdlAttributes? = null,
+    override val bounds: IdlElementBounds = IdlElementBounds(),
 ): ResolvedIdlDeclaration {
     override val isNullable = true
 
@@ -85,7 +89,8 @@ class ResolvedIdlInterface(
 @Serializable
 class ResolvedIdlDictionary(
     override val name: String,
-    override val attributes: List<IdlExtendedAttribute> = emptyList(),
+    override val attributes: IdlAttributes? = null,
+    override val bounds: IdlElementBounds = IdlElementBounds(),
 ): ResolvedIdlDeclaration {
     override val isNullable = true
 
@@ -98,7 +103,8 @@ class ResolvedIdlDictionary(
 class ResolvedIdlEnum(
     override val name: String,
     val elements: List<String>,
-    override val attributes: List<IdlExtendedAttribute> = emptyList(),
+    override val attributes: IdlAttributes? = null,
+    override val bounds: IdlElementBounds = IdlElementBounds(),
 ): ResolvedIdlDeclaration {
     override val isNullable = false
 }
@@ -107,7 +113,8 @@ class ResolvedIdlEnum(
 class ResolvedIdlTypeDef(
     override val name: String,
     private var parserType: com.huskerdev.webidl.parser.IdlType?,
-    override val attributes: List<IdlExtendedAttribute> = emptyList(),
+    override val attributes: IdlAttributes? = null,
+    override val bounds: IdlElementBounds = IdlElementBounds(),
 ): ResolvedIdlDeclaration {
     @SerialName("_type")
     lateinit var type: ResolvedIdlType
@@ -126,7 +133,8 @@ class ResolvedIdlTypeDef(
 @Serializable
 class ResolvedIdlCallbackFunction(
     override val name: String,
-    override val attributes: List<IdlExtendedAttribute> = emptyList(),
+    override val attributes: IdlAttributes? = null,
+    override val bounds: IdlElementBounds = IdlElementBounds(),
 ): ResolvedIdlDeclaration {
     override val isNullable = false
 
@@ -138,7 +146,8 @@ class ResolvedIdlCallbackFunction(
 @Serializable
 class ResolvedIdlNamespace(
     override val name: String,
-    override val attributes: List<IdlExtendedAttribute> = emptyList(),
+    override val attributes: IdlAttributes? = null,
+    override val bounds: IdlElementBounds = IdlElementBounds(),
 ): ResolvedIdlDeclaration {
     override val isNullable: Boolean = false
 

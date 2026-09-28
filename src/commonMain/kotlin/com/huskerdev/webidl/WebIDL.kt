@@ -40,25 +40,28 @@ class WebIDL {
         fun parseDefinitions(
             iterator: Iterator<Char>,
             types: Set<String> = WebIDLEnv.Default.builtinTypes.keys
-        ) = IdlParserConsumer.Collector().apply {
+        ) = IdlParserConsumer.Collector().run {
             streamDefinitions(iterator, this, types)
-        }.root
+            root to errors
+        }
 
         @JvmStatic
         fun parseDefinitions(
             text: String,
             types: Set<String> = WebIDLEnv.Default.builtinTypes.keys
-        ) = IdlParserConsumer.Collector().apply {
+        ) = IdlParserConsumer.Collector().run {
             streamDefinitions(text, this, types)
-        }.root
+            root to errors
+        }
 
         @JvmStatic
         fun parseDefinitions(
             rawSource: RawSource,
             types: Set<String> = WebIDLEnv.Default.builtinTypes.keys
-        ) = IdlParserConsumer.Collector().apply {
+        ) = IdlParserConsumer.Collector().run {
             streamDefinitions(rawSource, this, types)
-        }.root
+            root to errors
+        }
 
         // Resolve all definitions
 
@@ -66,19 +69,25 @@ class WebIDL {
         fun resolve(
             iterable: Iterator<Char>,
             env: WebIDLEnv = WebIDLEnv.Default
-        ) = IdlResolver(parseDefinitions(iterable, env.builtinTypes.keys), env)
+        ) = parseDefinitions(iterable, env.builtinTypes.keys).run {
+            IdlResolver(first, second, env)
+        }
 
         @JvmStatic
         fun resolve(
             text: String,
             env: WebIDLEnv = WebIDLEnv.Default
-        ) = IdlResolver(parseDefinitions(text, env.builtinTypes.keys), env)
+        ) = parseDefinitions(text, env.builtinTypes.keys).run {
+            IdlResolver(first, second, env)
+        }
 
         @JvmStatic
         fun resolve(
             rawSource: RawSource,
             env: WebIDLEnv = WebIDLEnv.Default
-        ) = IdlResolver(parseDefinitions(rawSource, env.builtinTypes.keys), env)
+        ) = parseDefinitions(rawSource, env.builtinTypes.keys).run {
+            IdlResolver(first, second, env)
+        }
     }
 }
 

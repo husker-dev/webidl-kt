@@ -11,10 +11,11 @@ class Typedefs {
     fun test1(){
         WebIDL.parseDefinitions("""
             typedef long identifier;
-        """.trimIndent()).apply {
-            assertEquals(definitions.size, 1)
+        """.trimIndent()).first.apply {
+            assertEquals(1, this.definitions.size)
 
-            assertTypedef(definitions[0],
+            assertTypedef(
+                this.definitions[0],
                 type = "long",
                 identifier = "identifier"
             )
@@ -37,38 +38,41 @@ class Typedefs {
                 boolean pointWithinBounds(Point p);
                 boolean allPointsWithinBounds(Points ps);
             };
-        """.trimIndent()).apply {
-            assertEquals(definitions.size, 3)
+        """.trimIndent()).first.apply {
+            assertEquals(3, this.definitions.size)
 
-            assertInterface(definitions[0],
+            assertInterface(
+                this.definitions[0],
                 name = "Point",
                 implements = null,
                 definitions = 2,
                 attributes = 1
             ) {
-                assertAttributeIdent(attributes[0], "Exposed", "Window")
+                assertAttributeIdent(attributes!![0], "Exposed", "Window")
 
-                assertField(definitions[0], "x", "double", isAttribute = true)
-                assertField(definitions[1], "y", "double", isAttribute = true)
+                assertField(this.definitions[0], "x", "double", isAttribute = true)
+                assertField(this.definitions[1], "y", "double", isAttribute = true)
             }
 
-            assertTypedef(definitions[1],
+            assertTypedef(
+                this.definitions[1],
                 type = "sequence<Point>",
                 identifier = "Points"
             )
 
-            assertInterface(definitions[2],
+            assertInterface(
+                this.definitions[2],
                 name = "Widget",
                 implements = null,
                 definitions = 2,
                 attributes = 1
             ) {
-                assertAttributeIdent(attributes[0], "Exposed", "Window")
+                assertAttributeIdent(attributes!![0], "Exposed", "Window")
 
-                assertOperation(definitions[0], "pointWithinBounds", "boolean", argsCount = 1) {
+                assertOperation(this.definitions[0], "pointWithinBounds", "boolean", argsCount = 1) {
                     assertField(args[0], "p", "Point")
                 }
-                assertOperation(definitions[1], "allPointsWithinBounds", "boolean", argsCount = 1) {
+                assertOperation(this.definitions[1], "allPointsWithinBounds", "boolean", argsCount = 1) {
                     assertField(args[0], "ps", "Points")
                 }
             }

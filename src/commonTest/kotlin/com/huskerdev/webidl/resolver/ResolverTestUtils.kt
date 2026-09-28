@@ -28,6 +28,14 @@ fun assertDefaultType(
     assertEquals(name, WebIDLPrinter.printResolvedType(type))
 }
 
+fun assertVoidType(
+    type: ResolvedIdlType,
+    name: String
+) {
+    assertIs<ResolvedIdlType.Void>(type)
+    assertEquals(name, WebIDLPrinter.printResolvedType(type))
+}
+
 fun assertInterface(
     inter: ResolvedIdlInterface,
     name: String,

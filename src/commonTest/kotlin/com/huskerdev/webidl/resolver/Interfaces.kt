@@ -24,18 +24,18 @@ class Interfaces {
         """.trimIndent()).apply {
             assertInterface(interfaces.values.toList()[0], "A") {
                 assertOperation(operations[0], "f") {
-                    assertDefaultType(type, "undefined")
+                    assertVoidType(type, "undefined")
                 }
                 assertOperation(operations[1], "g") {
-                    assertDefaultType(type, "undefined")
+                    assertVoidType(type, "undefined")
                 }
             }
             assertInterface(interfaces.values.toList()[1], "B", implements = interfaces.values.toList()[0]) {
                 assertOperation(operations[0], "f") {
-                    assertDefaultType(type, "undefined")
+                    assertVoidType(type, "undefined")
                 }
                 assertOperation(operations[1], "g") {
-                    assertDefaultType(type, "undefined")
+                    assertVoidType(type, "undefined")
                     assertArgument(args[0], "x") {
                         assertDefaultType(type, "DOMString")
                     }
@@ -158,7 +158,7 @@ class Interfaces {
                     }
                 }
                 assertOperation(operations[1], "addEventListener") {
-                    assertDefaultType(type, "undefined")
+                    assertVoidType(type, "undefined")
                     assertArgument(args[0], "type") {
                         assertDefaultType(type, "DOMString")
                     }
@@ -169,7 +169,7 @@ class Interfaces {
             }
             assertInterface(interfaces.values.toList()[1], "EventListener", isCallback = true) {
                 assertOperation(operations[0], "handleEvent") {
-                    assertDefaultType(type, "undefined")
+                    assertVoidType(type, "undefined")
                     assertArgument(args[0], "event") {
                         assertDefaultType(type, "Event")
                     }
