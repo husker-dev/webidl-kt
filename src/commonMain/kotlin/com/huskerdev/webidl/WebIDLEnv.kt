@@ -6,7 +6,8 @@ import com.huskerdev.webidl.resolver.WebIDLBuiltinKind
 interface WebIDLEnv {
     val builtinTypes: Map<String, WebIDLBuiltinKind>
 
-    val overloadingSupport: Boolean
+    val overloadingSupported: Boolean
+    val emptyEnumSupported: Boolean
 
     object Default: WebIDLEnv {
         override val builtinTypes = mapOf(
@@ -37,7 +38,8 @@ interface WebIDLEnv {
             "object"               to WebIDLBuiltinKind.OBJECT,
             "symbol"               to WebIDLBuiltinKind.CHAR,
         )
-        override val overloadingSupport: Boolean = true
+        override val overloadingSupported: Boolean = true
+        override val emptyEnumSupported: Boolean = true
     }
 }
 

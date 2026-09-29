@@ -101,22 +101,26 @@ class IdlResolver(
                     element = ResolvedIdlDictionary(def.name.text, def.attributes, def.bounds),
                     name = def.name
                 )
-                is IdlEnum -> putTypeDeclarationInto(
-                    map = collectedEnums,
-                    element = ResolvedIdlEnum(
-                        name = def.name.text,
-                        elements = buildSet {
-                            def.elements.forEach {
-                                if(it.name.text in this)
-                                    collectedTypeErrors += WebIDLTypeErrorException(it.name.bounds, "Element '${it.name.text}' is already defined.")
-                                else add(it.name.text)
-                            }
-                        }.toList(),
-                        attributes = def.attributes,
-                        bounds = def.bounds
-                    ),
-                    name = def.name
-                )
+                is IdlEnum -> {
+                    putTypeDeclarationInto(
+                        map = collectedEnums,
+                        element = ResolvedIdlEnum(
+                            name = def.name.text,
+                            elements = buildSet {
+                                def.elements.forEach {
+                                    if(it.name.text in this)
+                                        collectedTypeErrors += WebIDLTypeErrorException(it.name.bounds, "Element '${it.name.text}' is already defined.")
+                                    else add(it.name.text)
+                                }
+                            }.toList(),
+                            attributes = def.attributes,
+                            bounds = def.bounds
+                        ),
+                        name = def.name
+                    )
+                    if(def.elements.isEmpty() && !env.emptyEnumSupported)
+                        collectedTypeErrors += WebIDLTypeErrorException(def.name.bounds, "Empty enum is not allowed")
+                }
                 is IdlNamespace -> putTypeDeclarationInto(
                     map = collectedNamespaces,
                     element = ResolvedIdlNamespace(def.name.text, def.attributes, def.bounds),
@@ -170,7 +174,7 @@ class IdlResolver(
 
                             is IdlOperation -> {
                                 val name = decl.name.text
-                                if(!env.overloadingSupport && (
+                                if(!env.overloadingSupported && (
                                         inter.staticOperations.any { it.name == name } ||
                                         inter.operations.any { it.name == name }
                                 )) {
