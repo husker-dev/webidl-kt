@@ -7,7 +7,7 @@ open class WebIDLErrorException(
     val bounds: IdlElementBounds,
     val errorTitle: String,
     val errorMessage: String
-): Exception("$errorTitle | $errorMessage $bounds")
+): Exception("[${bounds.lineIndex}:${bounds.lineCharIndex}] $errorMessage")
 
 // Syntax error
 

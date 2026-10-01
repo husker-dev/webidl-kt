@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "com.huskerdev"
-version = "1.1.1"
+version = "1.1.2"
 
 kotlin {
 
@@ -81,7 +81,8 @@ kotlin {
 mavenPublishing {
     publishToMavenCentral()
 
-    signAllPublications()
+    if(project.hasProperty("sign"))
+        signAllPublications()
 
     coordinates(group.toString(), "webidl-kt", version.toString())
 

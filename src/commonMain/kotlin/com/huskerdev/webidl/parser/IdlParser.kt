@@ -76,11 +76,8 @@ class IdlParser(
         consumer.enter(parent)
         try {
             while (!brackets || lexer.current.type != WebIDLLexer.LexemeType.R_CURLY_BRACKET) {
-                if(!lexer.hasNext()) {
-                    if(!brackets && lexer.current.type != WebIDLLexer.LexemeType.SEMICOLON)
-                        throw WebIDLUnexpectedSymbolException(lexer.current, lexer.current.content)
-                    else break
-                }
+                if(!lexer.hasNext())
+                    break
 
                 val firstLexeme = lexer.current
 
