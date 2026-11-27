@@ -10,6 +10,18 @@ object WebIDLPrinter {
         definition: IdlDefinition,
         singleLine: Boolean = false
     ): IntentStringBuilder {
+        if (definition is IdlCommentHolder) {
+            definition.leadingComments.forEach { comment ->
+                val indentation = comment.bounds.lineCharIndex.coerceAtLeast(0)
+                val text = comment.rawText.lines().mapIndexed { index, line ->
+                    if (index > 0 && line.length >= indentation &&
+                        line.take(indentation).all { it == ' ' || it == '\t' }
+                    ) line.drop(indentation)
+                    else line
+                }.joinToString("\n")
+                builder.append(text).append('\n')
+            }
+        }
         definition.apply {
             when (this) {
                 is IdlRoot -> {

@@ -93,12 +93,12 @@ class IdlResolver(
             when (def) {
                 is IdlInterface if(!def.isPartial) -> putTypeDeclarationInto(
                     map = (if(def.isMixin) collectedMixins else collectedInterfaces),
-                    element = ResolvedIdlInterface(def.name.text, def.isCallback, def.attributes, def.bounds),
+                    element = ResolvedIdlInterface(def.name.text, def.isCallback, def.attributes, def.bounds, def.leadingComments),
                     name = def.name
                 )
                 is IdlDictionary -> putTypeDeclarationInto(
                     map = collectedDictionaries,
-                    element = ResolvedIdlDictionary(def.name.text, def.attributes, def.bounds),
+                    element = ResolvedIdlDictionary(def.name.text, def.attributes, def.bounds, def.leadingComments),
                     name = def.name
                 )
                 is IdlEnum -> {
@@ -114,7 +114,9 @@ class IdlResolver(
                                 }
                             }.toList(),
                             attributes = def.attributes,
-                            bounds = def.bounds
+                            bounds = def.bounds,
+                            leadingComments = def.leadingComments,
+                            elementComments = def.elements.associate { it.name.text to it.leadingComments }
                         ),
                         name = def.name
                     )
@@ -123,17 +125,17 @@ class IdlResolver(
                 }
                 is IdlNamespace -> putTypeDeclarationInto(
                     map = collectedNamespaces,
-                    element = ResolvedIdlNamespace(def.name.text, def.attributes, def.bounds),
+                    element = ResolvedIdlNamespace(def.name.text, def.attributes, def.bounds, def.leadingComments),
                     name = def.name
                 )
                 is IdlTypeDef -> putTypeDeclarationInto(
                     map = collectedTypeDefs,
-                    element = ResolvedIdlTypeDef(def.name.text, def.type, def.attributes, def.bounds),
+                    element = ResolvedIdlTypeDef(def.name.text, def.type, def.attributes, def.bounds, def.leadingComments),
                     name = def.name
                 )
                 is IdlCallbackFunction -> putTypeDeclarationInto(
                     map = collectedCallbacks,
-                    element = ResolvedIdlCallbackFunction(def.name.text, def.attributes, def.bounds),
+                    element = ResolvedIdlCallbackFunction(def.name.text, def.attributes, def.bounds, def.leadingComments),
                     name = def.name
                 )
                 else -> return@forEach
@@ -195,39 +197,45 @@ class IdlResolver(
                                 inter.constructors += ResolvedIdlConstructor(
                                     args = args,
                                     attributes = decl.attributes,
-                                    bounds = decl.bounds
+                                    bounds = decl.bounds,
+                                    leadingComments = decl.leadingComments
                                 )
                             }
 
                             is IdlIterable -> {
                                 inter.isIterable = true
+                                inter.iterableComments = decl.leadingComments
                                 inter.iterableType = findType(decl.keyType) to decl.valueType?.run { findType(this) }
                             }
                             is IdlAsyncIterableLike -> {
                                 inter.isAsyncIterable = true
+                                inter.asyncIterableComments = decl.leadingComments
                                 inter.asyncIterableType =
                                     findType(decl.keyType) to decl.valueType?.run { findType(this) }
                             }
                             is IdlMapLike -> {
                                 inter.isMap = true
+                                inter.mapComments = decl.leadingComments
                                 inter.isReadOnlyMap = decl.isReadOnly
                                 inter.mapType = findType(decl.keyType) to findType(decl.valueType)
                             }
                             is IdlSetLike -> {
                                 inter.isSet = true
+                                inter.setComments = decl.leadingComments
                                 inter.isReadOnlySet = decl.isReadOnly
                                 inter.setType = findType(decl.type)
                             }
                             is IdlGetter ->
-                                inter.getter = decl.operation.toFunction()
+                                inter.getter = decl.operation.toFunction(decl.leadingComments)
 
                             is IdlSetter ->
-                                inter.setter = decl.operation.toFunction()
+                                inter.setter = decl.operation.toFunction(decl.leadingComments)
 
                             is IdlStringifier -> {
                                 inter.stringifierEnabled = true
+                                inter.stringifierComments = decl.leadingComments
                                 if(decl.field != null)
-                                    inter.stringifier = decl.field.toDeclarationField()
+                                    inter.stringifier = decl.field.toDeclarationField(decl.leadingComments)
                             }
                             else -> collectedTypeErrors += WebIDLTypeErrorException(decl.bounds, "Unexpected definition.")
                         }
@@ -327,7 +335,7 @@ class IdlResolver(
         }
     }
 
-    private fun IdlField.toDeclarationField(): ResolvedIdlField.Declaration {
+    private fun IdlField.toDeclarationField(comments: List<IdlComment> = leadingComments): ResolvedIdlField.Declaration {
         val type = findType(type)
         if(value != null && !type.canConsume(value)) {
             collectedTypeErrors += WebIDLTypeErrorException(
@@ -341,7 +349,8 @@ class IdlResolver(
             value,
             isAttribute, isStatic, isReadOnly, isInherit, isConst, isRequired,
             attributes,
-            bounds
+            bounds,
+            comments
         )
     }
 
@@ -351,16 +360,18 @@ class IdlResolver(
         value,
         isOptional, isVariadic,
         attributes,
-        bounds
+        bounds,
+        leadingComments
     )
 
-    private fun IdlOperation.toFunction() = ResolvedIdlOperation(
+    private fun IdlOperation.toFunction(comments: List<IdlComment> = leadingComments) = ResolvedIdlOperation(
         name.text,
         findType(type),
         args.toArguments(),
         isStatic,
         attributes,
-        bounds
+        bounds,
+        comments
     )
 
     private fun List<IdlField>.toArguments() = buildList {

@@ -155,7 +155,8 @@ class ParserErrors {
         val error = collector.errors.single()
         assertIs<WebIDLUnexpectedSymbolException>(error)
         assertEquals("Unexpected symbol: or.", error.errorMessage)
-        assertTrue(error.message!!.startsWith("Syntax error | Unexpected symbol: or"))
+        assertEquals("Syntax error", error.errorTitle)
+        assertEquals("[0:0] Unexpected symbol: or.", error.message)
         assertEquals(listOf("Fine"), collector.root.definitions.names())
     }
 

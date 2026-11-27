@@ -14,7 +14,7 @@ class WebIDLLexer(
         private val spaces = setOf(' ', '\t', '\n', '\r')
 
         private val splitters = spaces + setOf(
-            ';', ':', '{', '}', '(', ')', '[', ']', '=', ',', '\"', '<', '>', '?', '*', '.'
+            ';', ':', '{', '}', '(', ')', '[', ']', '=', ',', '\"', '<', '>', '?', '*', '.', '/'
         )
 
         private val digits = setOf(
@@ -64,7 +64,8 @@ class WebIDLLexer(
     data class Lexeme(
         val content: String,
         val type: LexemeType,
-        val bounds: IdlElementBounds
+        val bounds: IdlElementBounds,
+        val leadingTrivia: List<Lexeme> = emptyList()
     )
 
     private val collectedErrors = arrayListOf<WebIDLSyntaxErrorException>()
@@ -78,6 +79,7 @@ class WebIDLLexer(
     private var frontOffset = 0
     private var lineIndex = 0
     private var lineStartOffset = 0
+    private var previousWasCR = false
 
     private var pending: Lexeme? = null
 
@@ -127,10 +129,11 @@ class WebIDLLexer(
         val c = front
         front = rear
         rear = null
-        if (c == '\n') {
-            lineIndex++
+        if (c == '\r' || c == '\n') {
+            if (c == '\r' || !previousWasCR) lineIndex++
             lineStartOffset = frontOffset + 1
         }
+        previousWasCR = c == '\r'
         frontOffset++
         return c
     }
@@ -151,6 +154,7 @@ class WebIDLLexer(
 
     private fun readLexeme(): Lexeme? {
         val builder = StringBuilder()
+        val trivia = arrayListOf<Lexeme>()
         while (true) {
             val start = frontOffset
             val startLineIndex = lineIndex
@@ -163,8 +167,9 @@ class WebIDLLexer(
                     startLineIndex, startLineCharIndex
                 )
             }
+            trivia += makeLexeme(start, frontOffset, type, builder.toString(), startLineIndex, startLineCharIndex)
         }
-        return if (peek() == null) null else readToken()
+        return if (peek() == null) null else readToken().copy(leadingTrivia = trivia)
     }
 
     private fun scanTrivia(builder: StringBuilder): LexemeType? {
@@ -177,22 +182,25 @@ class WebIDLLexer(
             '/' -> when (ahead()) {
                 '/' -> {
                     builder.append(read())
-                    readWhile(builder) { it != '\n' }
+                    readWhile(builder) { it != '\n' && it != '\r' }
                     LexemeType.LINE_COMMENT
                 }
 
                 '*' -> {
                     builder.append(read())
                     builder.append(read())
+                    var closed = false
                     while (true) {
                         val ch = peek() ?: break
                         if (ch == '*' && ahead() == '/') {
                             builder.append(read())
                             builder.append(read())
+                            closed = true
                             break
                         }
                         builder.append(read())
                     }
+                    if (!closed) collectedErrors += newException("Unterminated block comment.")
                     LexemeType.BLOCK_COMMENT
                 }
 
@@ -258,6 +266,7 @@ class WebIDLLexer(
                     '=' -> LexemeType.EQUALS
                     '?' -> LexemeType.QUESTION
                     '*' -> LexemeType.WILDCARD
+                    '/' -> throw newException("Unexpected token.")
                     '\"' -> {
                         readString(builder)
                         LexemeType.STRING

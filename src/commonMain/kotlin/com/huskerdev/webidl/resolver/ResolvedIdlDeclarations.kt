@@ -3,11 +3,13 @@ package com.huskerdev.webidl.resolver
 import com.huskerdev.webidl.IdlElementBounds
 import com.huskerdev.webidl.parser.IdlAttributeHolder
 import com.huskerdev.webidl.parser.IdlAttributes
+import com.huskerdev.webidl.parser.IdlComment
+import com.huskerdev.webidl.parser.IdlCommentHolder
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed interface ResolvedIdlDeclaration: IdlAttributeHolder {
+sealed interface ResolvedIdlDeclaration: IdlAttributeHolder, IdlCommentHolder {
     val name: String
     val isNullable: Boolean
     val bounds: IdlElementBounds
@@ -20,6 +22,7 @@ class BuiltinIdlDeclaration(
 ): ResolvedIdlDeclaration {
     override val bounds: IdlElementBounds = IdlElementBounds()
     override val attributes: IdlAttributes? = null
+    override val leadingComments: List<IdlComment> = emptyList()
 
     override val isNullable = kind.nullable
 }
@@ -30,6 +33,7 @@ class ResolvedIdlInterface(
     val isCallback: Boolean = false,
     override val attributes: IdlAttributes? = null,
     override val bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList(),
 ): ResolvedIdlDeclaration {
     override val isNullable = true
 
@@ -54,15 +58,21 @@ class ResolvedIdlInterface(
 
     var stringifier: ResolvedIdlField.Declaration? = null
 
+    var stringifierComments: List<IdlComment> = emptyList()
+
 
     var isIterable: Boolean = false
 
     var iterableType: Pair<ResolvedIdlType, ResolvedIdlType?>? = null
 
+    var iterableComments: List<IdlComment> = emptyList()
+
 
     var isAsyncIterable: Boolean = false
 
     var asyncIterableType: Pair<ResolvedIdlType, ResolvedIdlType?>? = null
+
+    var asyncIterableComments: List<IdlComment> = emptyList()
 
 
     var isMap: Boolean = false
@@ -70,19 +80,35 @@ class ResolvedIdlInterface(
 
     var mapType: Pair<ResolvedIdlType, ResolvedIdlType>? = null
 
+    var mapComments: List<IdlComment> = emptyList()
+
 
     var isSet: Boolean = false
     var isReadOnlySet: Boolean = false
 
     var setType: ResolvedIdlType? = null
 
+    var setComments: List<IdlComment> = emptyList()
+
     fun applyMixin(mixin: ResolvedIdlInterface){
         fields += mixin.fields
         operations += mixin.operations
-        iterableType = mixin.iterableType
-        asyncIterableType = mixin.asyncIterableType
-        mapType = mixin.mapType
-        setType = mixin.setType
+        if (mixin.iterableType != null) {
+            iterableType = mixin.iterableType
+            iterableComments = mixin.iterableComments
+        }
+        if (mixin.asyncIterableType != null) {
+            asyncIterableType = mixin.asyncIterableType
+            asyncIterableComments = mixin.asyncIterableComments
+        }
+        if (mixin.mapType != null) {
+            mapType = mixin.mapType
+            mapComments = mixin.mapComments
+        }
+        if (mixin.setType != null) {
+            setType = mixin.setType
+            setComments = mixin.setComments
+        }
     }
 }
 
@@ -91,6 +117,7 @@ class ResolvedIdlDictionary(
     override val name: String,
     override val attributes: IdlAttributes? = null,
     override val bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList(),
 ): ResolvedIdlDeclaration {
     override val isNullable = true
 
@@ -105,6 +132,8 @@ class ResolvedIdlEnum(
     val elements: List<String>,
     override val attributes: IdlAttributes? = null,
     override val bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList(),
+    val elementComments: Map<String, List<IdlComment>> = emptyMap(),
 ): ResolvedIdlDeclaration {
     override val isNullable = false
 }
@@ -115,6 +144,7 @@ class ResolvedIdlTypeDef(
     private var parserType: com.huskerdev.webidl.parser.IdlType?,
     override val attributes: IdlAttributes? = null,
     override val bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList(),
 ): ResolvedIdlDeclaration {
     @SerialName("_type")
     lateinit var type: ResolvedIdlType
@@ -135,6 +165,7 @@ class ResolvedIdlCallbackFunction(
     override val name: String,
     override val attributes: IdlAttributes? = null,
     override val bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList(),
 ): ResolvedIdlDeclaration {
     override val isNullable = false
 
@@ -148,6 +179,7 @@ class ResolvedIdlNamespace(
     override val name: String,
     override val attributes: IdlAttributes? = null,
     override val bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList(),
 ): ResolvedIdlDeclaration {
     override val isNullable: Boolean = false
 

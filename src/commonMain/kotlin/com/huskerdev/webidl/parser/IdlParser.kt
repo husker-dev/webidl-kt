@@ -23,26 +23,26 @@ class IdlParser(
             walkDefinitionsBlock(
                 IdlRoot(),
                 false
-            ) { attributes, modifiers ->
+            ) { attributes, modifiers, comments ->
                 when (lexer.current.type) {
 
                     // Definitions
                     WebIDLLexer.LexemeType.KEYWORD -> when (lexer.current.content) {
-                        "interface", -> parseInterface(attributes, modifiers)
-                        "dictionary" -> parseDictionary(attributes, modifiers)
-                        "namespace" -> parseNamespace(attributes, modifiers)
-                        "enum" -> parseEnum(attributes, modifiers)
-                        "typedef" -> parseTypeDef(attributes, modifiers)
+                        "interface", -> parseInterface(attributes, modifiers, comments)
+                        "dictionary" -> parseDictionary(attributes, modifiers, comments)
+                        "namespace" -> parseNamespace(attributes, modifiers, comments)
+                        "enum" -> parseEnum(attributes, modifiers, comments)
+                        "typedef" -> parseTypeDef(attributes, modifiers, comments)
                         "callback" -> when (lexer.next().type) {
-                            WebIDLLexer.LexemeType.IDENTIFIER -> parseCallbackFunction(attributes, modifiers)
-                            else -> parseInterface(attributes, modifiers, isCallback = true)
+                            WebIDLLexer.LexemeType.IDENTIFIER -> parseCallbackFunction(attributes, modifiers, comments)
+                            else -> parseInterface(attributes, modifiers, comments, isCallback = true)
                         }
                         else -> throw WebIDLUnexpectedSymbolException(lexer.current, lexer.current.content)
                     }
 
                     // includes/implements
                     WebIDLLexer.LexemeType.IDENTIFIER ->
-                        parseImplements(modifiers)
+                        parseImplements(modifiers, comments)
 
                     else -> {
                         val found = lexer.current
@@ -62,7 +62,7 @@ class IdlParser(
     private fun walkDefinitionsBlock(
         parent: IdlContainer,
         brackets: Boolean = true,
-        onDefinition: (attributes: IdlAttributes?, modifiers: Modifiers) -> IdlDefinition
+        onDefinition: (attributes: IdlAttributes?, modifiers: Modifiers, comments: List<IdlComment>) -> IdlDefinition
     ): IdlDefinition {
         if(brackets) {
             if(lexer.current.type != WebIDLLexer.LexemeType.L_CURLY_BRACKET) {
@@ -82,10 +82,13 @@ class IdlParser(
                 val firstLexeme = lexer.current
 
                 val attributes = parseExtendedAttributes()
+                val comments = if (attributes != null)
+                    parseComments(previous = parseComments(firstLexeme))
+                else parseComments(firstLexeme)
                 val modifiers = parseModifiers()
 
                 try {
-                    val definition = onDefinition(attributes, modifiers)
+                    val definition = onDefinition(attributes, modifiers, comments)
                     definition.locateAt(firstLexeme)
                     definition.endAt(lexer.current.bounds.endOffset)
 
@@ -120,7 +123,8 @@ class IdlParser(
 
     private fun parseNamespace(
         attributes: IdlAttributes?,
-        modifiers: Modifiers
+        modifiers: Modifiers,
+        comments: List<IdlComment>
     ): IdlDefinition {
         modifiers.assertAllowed("partial")
         val isPartial = modifiers.get("partial")
@@ -133,12 +137,14 @@ class IdlParser(
             IdlNamespace(
                 name = IdlName(nameLexeme, isReference = false),
                 isPartial = isPartial,
-                attributes = attributes
+                attributes = attributes,
+                leadingComments = comments
             )
-        ) { attributes, modifiers ->
+        ) { attributes, modifiers, comments ->
             parseFieldOrOperation(
                 attributes = attributes,
                 modifiers = modifiers,
+                comments = comments,
                 isOperationArgument = false,
                 allowReadonly = true,
                 allowAttribute = true
@@ -148,7 +154,8 @@ class IdlParser(
 
     private fun parseCallbackFunction(
         attributes: IdlAttributes?,
-        modifiers: Modifiers
+        modifiers: Modifiers,
+        comments: List<IdlComment>
     ): IdlDefinition {
         modifiers.assertAllowed()
         expectType(lexer.current, WebIDLLexer.LexemeType.IDENTIFIER)
@@ -173,13 +180,15 @@ class IdlParser(
         return IdlCallbackFunction(
             name = IdlName(nameLexeme, isReference = false),
             operation = operation,
-            attributes = attributes
+            attributes = attributes,
+            leadingComments = comments
         ).also(consumer::consume)
     }
 
     private fun parseTypeDef(
         attributes: IdlAttributes?,
-        modifiers: Modifiers
+        modifiers: Modifiers,
+        comments: List<IdlComment>
     ): IdlDefinition {
         modifiers.assertAllowed()
         lexer.next()
@@ -192,13 +201,15 @@ class IdlParser(
         return IdlTypeDef(
             name = IdlName(nameLexeme, isReference = false),
             type = type,
-            attributes = attributes
+            attributes = attributes,
+            leadingComments = comments
         ).also(consumer::consume)
     }
 
     private fun parseEnum(
         attributes: IdlAttributes?,
-        modifiers: Modifiers
+        modifiers: Modifiers,
+        comments: List<IdlComment>
     ): IdlDefinition {
         modifiers.assertAllowed()
         expectType(lexer.next(), WebIDLLexer.LexemeType.IDENTIFIER)
@@ -213,7 +224,8 @@ class IdlParser(
 
         val enum = IdlEnum(
             name = IdlName(nameLexeme, isReference = false),
-            attributes = attributes
+            attributes = attributes,
+            leadingComments = comments
         )
         consumer.enter(enum)
         try {
@@ -224,7 +236,8 @@ class IdlParser(
                     consumer.consume(
                         IdlEnumElement(
                             name = IdlName(lexer.current, isReference = false),
-                            bounds = lexer.current.bounds
+                            bounds = lexer.current.bounds,
+                            leadingComments = parseComments()
                         )
                     )
                     lexer.next()
@@ -253,7 +266,8 @@ class IdlParser(
 
     private fun parseDictionary(
         attributes: IdlAttributes?,
-        modifiers: Modifiers
+        modifiers: Modifiers,
+        comments: List<IdlComment>
     ): IdlDefinition {
         modifiers.assertAllowed("partial")
         val isPartial = modifiers.get("partial")
@@ -274,15 +288,17 @@ class IdlParser(
                 name = IdlName(nameLexeme, isReference = false),
                 implements = implements,
                 isPartial = isPartial,
-                attributes = attributes
+                attributes = attributes,
+                leadingComments = comments
             )
-        ) { attributes, modifiers ->
+        ) { attributes, modifiers, comments ->
             if(attributes != null)
                 throw WebIDLSyntaxErrorException(lexer.current, "Dictionary members can not have attributes.")
 
             parseFieldOrOperation(
                 attributes = attributes,
                 modifiers = modifiers,
+                comments = comments,
                 isOperationArgument = false,
                 allowOptional = true,
                 allowRequired = true
@@ -293,6 +309,7 @@ class IdlParser(
     private fun parseInterface(
         attributes: IdlAttributes?,
         modifiers: Modifiers,
+        comments: List<IdlComment>,
         isCallback: Boolean = false,
     ): IdlDefinition {
         modifiers.assertAllowed("partial")
@@ -323,25 +340,26 @@ class IdlParser(
                 isMixin = isMixin,
                 isCallback = isCallback,
                 implements = implements,
-                attributes = attributes
+                attributes = attributes,
+                leadingComments = comments
             )
-        ) { attributes, modifiers ->
+        ) { attributes, modifiers, comments ->
             when(lexer.current.content) {
                 "iterable" -> parseGeneric().run {
                     modifiers.assertAllowed()
-                    IdlIterable(get(0), getOrNull(1))
+                    IdlIterable(get(0), getOrNull(1), leadingComments = comments)
                 }
                 "async_iterable" -> parseGeneric().run {
                     modifiers.assertAllowed()
-                    IdlAsyncIterableLike(get(0), getOrNull(1))
+                    IdlAsyncIterableLike(get(0), getOrNull(1), leadingComments = comments)
                 }
                 "maplike" -> parseGeneric().run {
                     modifiers.assertAllowed("readonly")
-                    IdlMapLike(this[0], this[1], modifiers.get("readonly"))
+                    IdlMapLike(this[0], this[1], modifiers.get("readonly"), leadingComments = comments)
                 }
                 "setlike" -> parseGeneric().run {
                     modifiers.assertAllowed("readonly")
-                    IdlSetLike(this[0], modifiers.get("readonly"))
+                    IdlSetLike(this[0], modifiers.get("readonly"), leadingComments = comments)
                 }
                 "stringifier" -> {
                     modifiers.assertAllowed()
@@ -363,7 +381,7 @@ class IdlParser(
 
                     field?.locateAt(firstLexeme)
 
-                    IdlStringifier(field)
+                    IdlStringifier(field, leadingComments = comments)
                 }
                 "getter" -> {
                     modifiers.assertAllowed()
@@ -380,7 +398,7 @@ class IdlParser(
 
                     operation.locateAt(firstLexeme)
 
-                    IdlGetter(operation)
+                    IdlGetter(operation, leadingComments = comments)
                 }
                 "setter" -> {
                     modifiers.assertAllowed()
@@ -397,7 +415,7 @@ class IdlParser(
 
                     operation.locateAt(firstLexeme)
 
-                    IdlSetter(operation)
+                    IdlSetter(operation, leadingComments = comments)
                 }
                 "constructor" -> {
                     modifiers.assertAllowed()
@@ -407,13 +425,15 @@ class IdlParser(
                     IdlConstructor(
                         args = parseArguments(),
                         header = IdlName(firstLexeme, isReference = false),
-                        attributes = attributes
+                        attributes = attributes,
+                        leadingComments = comments
                     )
                 }
                 else -> {
                     parseFieldOrOperation(
                         attributes = attributes,
                         modifiers = modifiers,
+                        comments = comments,
                         isOperationArgument = false,
                         allowConst = true,
                         allowStatic = true,
@@ -426,7 +446,7 @@ class IdlParser(
         }
     }
 
-    private fun parseImplements(modifiers: Modifiers): IdlDefinition {
+    private fun parseImplements(modifiers: Modifiers, comments: List<IdlComment>): IdlDefinition {
         modifiers.assertAllowed()
         val identifier1 = lexer.current
 
@@ -441,11 +461,13 @@ class IdlParser(
         return when (action.content) {
             "includes" -> IdlIncludes(
                 target = IdlName(identifier1),
-                source = IdlName(identifier2)
+                source = IdlName(identifier2),
+                leadingComments = comments
             )
             "implements" -> IdlImplements(
                 target = IdlName(identifier1),
-                source = IdlName(identifier2)
+                source = IdlName(identifier2),
+                leadingComments = comments
             )
             else -> throw UnsupportedOperationException()
         }.also(consumer::consume)
@@ -464,7 +486,8 @@ class IdlParser(
         allowOptional: Boolean = false,
         allowRequired: Boolean = false,
         allowVariadic: Boolean = false,
-        allowAnonymous: Boolean = false
+        allowAnonymous: Boolean = false,
+        comments: List<IdlComment> = emptyList()
     ): IdlDefinition {
         modifiers.assertAllowed("static", "readonly", "attribute", "inherit", "const", "optional", "required")
         val isStatic = modifiers.get("static", allowStatic)
@@ -512,7 +535,8 @@ class IdlParser(
                 type = type,
                 args = args,
                 isStatic = isStatic,
-                attributes = attributes
+                attributes = attributes,
+                leadingComments = comments
             ).apply {
                 endAt(lexer.current.bounds.startOffset)
             }
@@ -552,7 +576,8 @@ class IdlParser(
                 isConst = isConst,
                 isVariadic = isVariadic,
                 isRequired = isRequired,
-                attributes = attributes
+                attributes = attributes,
+                leadingComments = comments
             ).apply {
                 endAt(endOffset)
             }
@@ -564,11 +589,15 @@ class IdlParser(
             try {
                 val firstLexeme = lexer.current
                 val attributes = parseExtendedAttributes()
+                val comments = if (attributes != null)
+                    parseComments(previous = parseComments(firstLexeme))
+                else parseComments(firstLexeme)
                 val modifiers = parseModifiers()
                 val field = parseFieldOrOperation(
                     attributes = attributes,
                     modifiers = modifiers,
                     isOperationArgument = true,
+                    comments = comments,
                     allowOptional = true,
                     allowVariadic = true
                 ) as? IdlField
@@ -720,6 +749,29 @@ class IdlParser(
         expectType(lexer.current, WebIDLLexer.LexemeType.R_ANGLE_BRACKET)
         expectType(lexer.next(), WebIDLLexer.LexemeType.SEMICOLON)
         return list
+    }
+
+    private fun parseComments(
+        lexeme: WebIDLLexer.Lexeme = lexer.current,
+        previous: List<IdlComment> = emptyList()
+    ): List<IdlComment> = buildList {
+        addAll(previous)
+        lexeme.leadingTrivia.forEach { trivia ->
+            when (trivia.type) {
+                WebIDLLexer.LexemeType.WHITE_SPACE -> {
+                    if (trivia.content
+                        .replace("\r\n", "\n")
+                        .replace('\r', '\n')
+                        .count { it == '\n' } > 1
+                    ) clear()
+                }
+                WebIDLLexer.LexemeType.LINE_COMMENT ->
+                    add(IdlComment(trivia.content, IdlComment.Kind.LINE, trivia.bounds))
+                WebIDLLexer.LexemeType.BLOCK_COMMENT ->
+                    add(IdlComment(trivia.content, IdlComment.Kind.BLOCK, trivia.bounds))
+                else -> Unit
+            }
+        }
     }
 
     private fun parseExtendedAttributes(): IdlAttributes? {

@@ -21,6 +21,10 @@ interface IdlAttributeHolder {
     val attributes: IdlAttributes?
 }
 
+interface IdlCommentHolder {
+    val leadingComments: List<IdlComment>
+}
+
 // Types
 
 @Serializable
@@ -95,8 +99,9 @@ data class IdlInterface(
     val implements: IdlName? = null,
     override val attributes: IdlAttributes? = null,
     override val definitions: MutableList<IdlDefinition> = mutableListOf(),
-    override var bounds: IdlElementBounds = IdlElementBounds()
-): IdlContainer, IdlAttributeHolder {
+    override var bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
+): IdlContainer, IdlAttributeHolder, IdlCommentHolder {
     override val children: List<IdlDefinition>
         get() = listOfNotNull(attributes, name, implements, *definitions.toTypedArray())
 }
@@ -107,8 +112,9 @@ data class IdlNamespace(
     val isPartial: Boolean = false,
     override val attributes: IdlAttributes? = null,
     override val definitions: MutableList<IdlDefinition> = mutableListOf(),
-    override var bounds: IdlElementBounds = IdlElementBounds()
-): IdlContainer, IdlAttributeHolder {
+    override var bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
+): IdlContainer, IdlAttributeHolder, IdlCommentHolder {
     override val children: List<IdlDefinition>
         get() = listOfNotNull(attributes, name, *definitions.toTypedArray())
 }
@@ -120,8 +126,9 @@ data class IdlDictionary(
     val isPartial: Boolean = false,
     override val attributes: IdlAttributes? = null,
     override val definitions: MutableList<IdlDefinition> = mutableListOf(),
-    override var bounds: IdlElementBounds = IdlElementBounds()
-): IdlContainer, IdlAttributeHolder {
+    override var bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
+): IdlContainer, IdlAttributeHolder, IdlCommentHolder {
     override val children: List<IdlDefinition>
         get() = listOfNotNull(attributes, name, implements, *definitions.toTypedArray())
 }
@@ -131,8 +138,9 @@ data class IdlCallbackFunction(
     val name: IdlName,
     val operation: IdlOperation,
     override val attributes: IdlAttributes? = null,
-    override var bounds: IdlElementBounds = IdlElementBounds()
-): IdlDefinition, IdlAttributeHolder {
+    override var bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
+): IdlDefinition, IdlAttributeHolder, IdlCommentHolder {
     override val children = listOfNotNull(attributes, name, operation)
 }
 
@@ -142,8 +150,9 @@ data class IdlTypeDef(
     @SerialName("_type")
     val type: IdlType,
     override val attributes: IdlAttributes? = null,
-    override var bounds: IdlElementBounds = IdlElementBounds()
-): IdlDefinition, IdlAttributeHolder {
+    override var bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
+): IdlDefinition, IdlAttributeHolder, IdlCommentHolder {
     override val children = listOfNotNull(attributes, type, name)
 }
 
@@ -152,8 +161,9 @@ data class IdlEnum(
     val name: IdlName,
     override val attributes: IdlAttributes? = null,
     val elements: MutableList<IdlEnumElement> = mutableListOf(),
-    override var bounds: IdlElementBounds = IdlElementBounds()
-): IdlDefinition, IdlAttributeHolder {
+    override var bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
+): IdlDefinition, IdlAttributeHolder, IdlCommentHolder {
     override val children: List<IdlDefinition>
         get() = listOfNotNull(attributes, name, *elements.toTypedArray())
 }
@@ -161,8 +171,9 @@ data class IdlEnum(
 @Serializable
 data class IdlEnumElement(
     val name: IdlName,
-    override var bounds: IdlElementBounds = IdlElementBounds()
-): IdlDefinition {
+    override var bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
+): IdlDefinition, IdlCommentHolder {
     override val children = listOf(name)
 }
 
@@ -170,8 +181,9 @@ data class IdlEnumElement(
 data class IdlIncludes(
     val target: IdlName,
     val source: IdlName,
-    override var bounds: IdlElementBounds = IdlElementBounds()
-): IdlDefinition {
+    override var bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
+): IdlDefinition, IdlCommentHolder {
     override val children = listOf(target, source)
 }
 
@@ -179,8 +191,9 @@ data class IdlIncludes(
 data class IdlImplements(
     val target: IdlName,
     val source: IdlName,
-    override var bounds: IdlElementBounds = IdlElementBounds()
-): IdlDefinition {
+    override var bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
+): IdlDefinition, IdlCommentHolder {
     override val children = listOf(target, source)
 }
 
@@ -190,7 +203,8 @@ data class IdlConstructor(
     val header: IdlName = IdlName("constructor"),
     override val attributes: IdlAttributes? = null,
     override var bounds: IdlElementBounds = IdlElementBounds(),
-): IdlDefinition, IdlAttributeHolder {
+    override val leadingComments: List<IdlComment> = emptyList()
+): IdlDefinition, IdlAttributeHolder, IdlCommentHolder {
     override val children = listOfNotNull(attributes, header, *args.toTypedArray())
 }
 
@@ -202,8 +216,9 @@ data class IdlOperation(
     val args: List<IdlField> = mutableListOf(),
     val isStatic: Boolean = false,
     override val attributes: IdlAttributes? = null,
-    override var bounds: IdlElementBounds = IdlElementBounds()
-): IdlDefinition, IdlAttributeHolder {
+    override var bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
+): IdlDefinition, IdlAttributeHolder, IdlCommentHolder {
     override val children = listOfNotNull(attributes, type, name, *args.toTypedArray())
 }
 
@@ -223,8 +238,9 @@ data class IdlField(
     val isVariadic: Boolean = false,
     val isRequired: Boolean = false,
     override val attributes: IdlAttributes? = null,
-    override var bounds: IdlElementBounds = IdlElementBounds()
-): IdlDefinition, IdlAttributeHolder {
+    override var bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
+): IdlDefinition, IdlAttributeHolder, IdlCommentHolder {
     override val children = listOfNotNull(attributes, type, name)
 }
 
@@ -232,8 +248,9 @@ data class IdlField(
 data class IdlIterable(
     val keyType: IdlType,
     val valueType: IdlType? = null,
-    override var bounds: IdlElementBounds = IdlElementBounds()
-): IdlDefinition {
+    override var bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
+): IdlDefinition, IdlCommentHolder {
     override val children = listOfNotNull(keyType, valueType)
 }
 
@@ -241,8 +258,9 @@ data class IdlIterable(
 data class IdlAsyncIterableLike(
     val keyType: IdlType,
     val valueType: IdlType? = null,
-    override var bounds: IdlElementBounds = IdlElementBounds()
-): IdlDefinition {
+    override var bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
+): IdlDefinition, IdlCommentHolder {
     override val children = listOfNotNull(keyType, valueType)
 }
 
@@ -251,8 +269,9 @@ data class IdlMapLike(
     val keyType: IdlType,
     val valueType: IdlType,
     val isReadOnly: Boolean = false,
-    override var bounds: IdlElementBounds = IdlElementBounds()
-): IdlDefinition {
+    override var bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
+): IdlDefinition, IdlCommentHolder {
     override val children = listOf(keyType, valueType)
 }
 
@@ -261,32 +280,36 @@ data class IdlSetLike(
     @SerialName("_type")
     val type: IdlType,
     val isReadOnly: Boolean,
-    override var bounds: IdlElementBounds = IdlElementBounds()
-): IdlDefinition {
+    override var bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
+): IdlDefinition, IdlCommentHolder {
     override val children = listOf(type)
 }
 
 @Serializable
 data class IdlStringifier(
     val field: IdlField? = null,
-    override var bounds: IdlElementBounds = IdlElementBounds()
-): IdlDefinition {
+    override var bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
+): IdlDefinition, IdlCommentHolder {
     override val children = listOfNotNull(field)
 }
 
 @Serializable
 data class IdlGetter(
     val operation: IdlOperation,
-    override var bounds: IdlElementBounds = IdlElementBounds()
-): IdlDefinition {
+    override var bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
+): IdlDefinition, IdlCommentHolder {
     override val children = listOf(operation)
 }
 
 @Serializable
 data class IdlSetter(
     val operation: IdlOperation,
-    override var bounds: IdlElementBounds = IdlElementBounds()
-): IdlDefinition {
+    override var bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
+): IdlDefinition, IdlCommentHolder {
     override val children = listOf(operation)
 }
 
@@ -392,4 +415,50 @@ sealed interface IdlExtendedAttribute: IdlDefinition {
     ): IdlExtendedAttribute {
         override val children = listOf(name)
     }
+}
+
+@Serializable
+data class IdlComment(
+    val rawText: String,
+    val kind: Kind,
+    val bounds: IdlElementBounds = IdlElementBounds()
+) {
+    @Serializable
+    enum class Kind { LINE, BLOCK }
+
+    val text: String
+        get() = when (kind) {
+            Kind.LINE -> rawText
+                .removePrefix("//")
+                .removePrefix(" ")
+
+            Kind.BLOCK -> {
+                val hasPadding = rawText.startsWith("/* ")
+                val baseline = bounds.lineCharIndex.coerceAtLeast(0) + 2 + (if (hasPadding) 1 else 0)
+
+                val lines = rawText
+                    .removePrefix("/*")
+                    .removeSuffix("*/")
+                    .removeSuffix(" ")
+                    .lines()
+                    .mapIndexed { index, line ->
+                        if (index == 0) line.removePrefix(" ")
+                        else {
+                            val indentation = line
+                                .takeWhile { it == ' ' || it == '\t' }
+                                .length
+                            line.drop(minOf(baseline, indentation))
+                        }
+                    }
+                    .toMutableList()
+
+                if (lines.lastOrNull()?.isBlank() == true)
+                    lines.removeAt(lines.lastIndex)
+
+                if (lines.firstOrNull()?.isBlank() == true)
+                    lines.removeAt(0)
+
+                lines.joinToString("\n")
+            }
+        }
 }

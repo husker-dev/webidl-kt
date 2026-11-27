@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "com.huskerdev"
-version = "1.1.2"
+version = "1.2.0"
 
 kotlin {
 
@@ -71,7 +71,6 @@ kotlin {
 
     sourceSets.commonMain.dependencies {
         implementation(libs.kotlinx.serialization)
-        implementation(libs.kotlinx.io)
     }
     sourceSets.commonTest.dependencies {
         implementation(kotlin("test"))

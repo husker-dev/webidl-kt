@@ -3,11 +3,13 @@ package com.huskerdev.webidl.resolver
 import com.huskerdev.webidl.IdlElementBounds
 import com.huskerdev.webidl.parser.IdlAttributeHolder
 import com.huskerdev.webidl.parser.IdlAttributes
+import com.huskerdev.webidl.parser.IdlComment
+import com.huskerdev.webidl.parser.IdlCommentHolder
 import com.huskerdev.webidl.parser.IdlValue
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed interface ResolvedIdlMember: IdlAttributeHolder {
+sealed interface ResolvedIdlMember: IdlAttributeHolder, IdlCommentHolder {
     val bounds: IdlElementBounds
 }
 
@@ -29,7 +31,8 @@ sealed interface ResolvedIdlField: ResolvedIdlMember {
         val isConst: Boolean,
         val isRequired: Boolean,
         override val attributes: IdlAttributes?,
-        override val bounds: IdlElementBounds = IdlElementBounds()
+        override val bounds: IdlElementBounds = IdlElementBounds(),
+        override val leadingComments: List<IdlComment> = emptyList()
     ): ResolvedIdlField
 
     @Serializable
@@ -40,7 +43,8 @@ sealed interface ResolvedIdlField: ResolvedIdlMember {
         val isOptional: Boolean,
         val isVariadic: Boolean,
         override val attributes: IdlAttributes?,
-        override val bounds: IdlElementBounds = IdlElementBounds()
+        override val bounds: IdlElementBounds = IdlElementBounds(),
+        override val leadingComments: List<IdlComment> = emptyList()
     ): ResolvedIdlField
 }
 
@@ -51,12 +55,14 @@ class ResolvedIdlOperation(
     val args: List<ResolvedIdlField.Argument>,
     val isStatic: Boolean,
     override val attributes: IdlAttributes?,
-    override val bounds: IdlElementBounds = IdlElementBounds()
+    override val bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
 ): ResolvedIdlMember
 
 @Serializable
 class ResolvedIdlConstructor(
     val args: List<ResolvedIdlField.Argument>,
     override val attributes: IdlAttributes?,
-    override val bounds: IdlElementBounds = IdlElementBounds()
+    override val bounds: IdlElementBounds = IdlElementBounds(),
+    override val leadingComments: List<IdlComment> = emptyList()
 ): ResolvedIdlMember
